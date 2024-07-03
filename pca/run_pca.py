@@ -5,7 +5,7 @@ from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
 
-infile = h5.File("C:\\Users\\keena\\Documents\\University of Arizona\\Jobs\\TIMESTEP NOIRLAB\\pca\\clumpy_models_201410_tvavg.hdf5", 'r')
+infile = h5.File("C:\\Users\\keena\\Documents\\University of Arizona\\Jobs\\TIMESTEP NOIRLAB\\wise-agn\\pca\\clumpy_models_201410_tvavg.hdf5", 'r')
 dset = infile
 
 #Setting up datasets
@@ -15,7 +15,7 @@ wave_norm = dset['wave'][:]
 wave = np.log10(dset['wave'][:])
 
 
-n_comp = range(1,21)
+n_comp = range(7,21)
 
 #output arrays
 err = []
@@ -47,6 +47,10 @@ for amt in n_comp:
 
 #Plotting
 plt.plot(n_comp,max_arr)
+plt.title('Error Curve')
+plt.xlabel('Number of Components')
+plt.ylabel('Max Error across all Spectra')
+plt.xticks(range(6,22,2)) 
 plt.savefig('max.png',dpi=300)
 plt.clf()
 
@@ -54,7 +58,7 @@ plt.plot(n_comp, err)
 plt.title('Error Curve')
 plt.xlabel('Number of Components')
 plt.ylabel('Median Error across all Spectra')
-plt.xticks(range(2,22,2)) 
+plt.xticks(range(6,22,2)) 
 plt.savefig('error.png', dpi = 300)
 plt.clf()
 
@@ -62,7 +66,7 @@ plt.plot(n_comp, err_mean)
 plt.title('Error Curve')
 plt.xlabel('Number of Components')
 plt.ylabel('Mean Error across all Spectra')
-plt.xticks(range(2,22,2)) 
+plt.xticks(range(6,22,2)) 
 plt.savefig('error_mean.png', dpi = 300)
 plt.clf()
 
@@ -70,7 +74,7 @@ plt.plot(n_comp, compression)
 plt.title('Compression Curve')
 plt.xlabel('Number of Components')
 plt.ylabel('Compression (1:val)')
-plt.xticks(range(2,22,2)) 
+plt.xticks(range(6,22,2)) 
 plt.savefig('compression.png', dpi = 300)
 plt.clf()
 

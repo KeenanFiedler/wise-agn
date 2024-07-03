@@ -11,6 +11,14 @@
     - try to fiddle around some more
 
 ############################################
+                AUTOENCODER
+############################################
+- Mid year check-in form for TIMESTEP
+- In run_pca.py, find outlier models/make histogram of errors for each spectra
+- autoencoder.py, change the inputs to be the correct parameters, outputs to be an SED
+    - Train to generate new SED if given new parameters
+
+############################################
                     PCA
 ############################################
 ----- FILES -----
@@ -24,18 +32,12 @@
     - Also creates plots for analyzing error and compression as the number of components increases
     - Can also analyze individual spectra
 
------ TO DO -----
-- In run_pca.py, find outlier models/make histogram of errors for each spectra
-
 ############################################
                 AUTOENCODER
 ############################################
 ----- FILES -----
 - autoencoder.py
+    - Using tensorflow+keras
     - Currently trains an variational autoencoder on the flux_tor values from the cut dataset
     - Output tries to mimic SEDs, can vary input parameters to get intermediate SED not in 
         original dataset, but parameters to vary are not original Y,N0,i,q,sig,tv parameters
-
------ TO DO -----
-- autoencoder.py, change the inputs to be the correct parameters, outputs to be an SED
-    - Train to generate new SED if given new parameters
