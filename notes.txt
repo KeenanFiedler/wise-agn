@@ -1,6 +1,6 @@
-############################################
+########################################
                 WORK NOTES
-############################################
+########################################
 
 ----- GENERAL -----
 - Links to Bright/Dark Nebula Files
@@ -10,17 +10,17 @@
 - Spatial cuts for the allwise catalog are still iffy
     - try to fiddle around some more
 
-############################################
+########################################
                 TO DO
-############################################
+########################################
 - Mid year check-in form for TIMESTEP
 - In run_pca.py, find outlier models/make histogram of errors for each spectra
 - autoencoder.py, change the inputs to be the correct parameters, outputs to be an SED
     - Train to generate new SED if given new parameters
 
-############################################
-                    PCA
-############################################
+########################################
+                PCA
+########################################
 ----- FILES -----
 - create_subset.py
     - Cuts the orignal model data file to only include a subset of the models
@@ -32,9 +32,9 @@
     - Also creates plots for analyzing error and compression as the number of components increases
     - Can also analyze individual spectra
 
-############################################
+########################################
                 AUTOENCODER
-############################################
+########################################
 ----- FILES -----
 - autoencoder.py
     - Using tensorflow+keras
