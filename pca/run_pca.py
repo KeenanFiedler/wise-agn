@@ -8,24 +8,36 @@ from matplotlib import gridspec
 infile = h5.File("C:\\Users\\keena\\Documents\\University of Arizona\\Jobs\\TIMESTEP NOIRLAB\\pca\\clumpy_models_201410_tvavg.hdf5", 'r')
 dset = infile
 
+#Setting up datasets
 flux = np.array(dset['flux_tor'][:])
 dataset = np.log10(np.array(dset['flux_tor'][:]))
 wave_norm = dset['wave'][:]
 wave = np.log10(dset['wave'][:])
-n_comp = range(7,11)
+
+
+n_comp = range(1,21)
+
+#output arrays
 err = []
 err_mean = []
 compression = []
-max_arr=[]
+max_arr= []
+
+
 for amt in n_comp:
+
+    #PCA Analysis
     pca = PCA(n_components=amt)
     mu = np.mean(dataset, axis=0)
     pca.fit(dataset)
     weights = pca.transform(dataset)
+
+    #Rebuilding Spectra
     Xhat = np.dot(weights, pca.components_)
     Xhat += mu
     Xhat = 10**Xhat
 
+    #Error Analysis
     err_set_all = np.abs((Xhat-flux))/flux
     max_arr.append(np.max(err_set_all))
     err.append(np.median(err_set_all))
@@ -33,9 +45,11 @@ for amt in n_comp:
     compression.append(1/((weights.size+pca.components_.size)/dataset.size))
     print(amt)
 
+#Plotting
 plt.plot(n_comp,max_arr)
 plt.savefig('max.png',dpi=300)
 plt.clf()
+
 plt.plot(n_comp, err)
 plt.title('Error Curve')
 plt.xlabel('Number of Components')
@@ -43,6 +57,7 @@ plt.ylabel('Median Error across all Spectra')
 plt.xticks(range(2,22,2)) 
 plt.savefig('error.png', dpi = 300)
 plt.clf()
+
 plt.plot(n_comp, err_mean)
 plt.title('Error Curve')
 plt.xlabel('Number of Components')
@@ -50,12 +65,18 @@ plt.ylabel('Mean Error across all Spectra')
 plt.xticks(range(2,22,2)) 
 plt.savefig('error_mean.png', dpi = 300)
 plt.clf()
+
 plt.plot(n_comp, compression)
 plt.title('Compression Curve')
 plt.xlabel('Number of Components')
-plt.ylabel('Compression Percent')
+plt.ylabel('Compression (1:val)')
+plt.xticks(range(2,22,2)) 
 plt.savefig('compression.png', dpi = 300)
 plt.clf()
+
+#############################
+#For Plotting Single Spectra#
+#############################
 """
 for amt in n_comp:
     pca = PCA(n_components=amt)
