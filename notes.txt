@@ -11,7 +11,7 @@
     - try to fiddle around some more
 
 ############################################
-                AUTOENCODER
+                TO DO
 ############################################
 - Mid year check-in form for TIMESTEP
 - In run_pca.py, find outlier models/make histogram of errors for each spectra
