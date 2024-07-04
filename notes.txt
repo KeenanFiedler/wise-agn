@@ -36,7 +36,7 @@
                 AUTOENCODER
 ########################################
 ----- FILES -----
-- autoencoder.py
+- decoder_train.py
     - Using tensorflow+keras
     - Currently trains an variational autoencoder on the flux_tor values from the cut dataset
     - Output tries to mimic SEDs, can vary input parameters to get intermediate SED not in 
