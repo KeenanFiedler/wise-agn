@@ -54,7 +54,7 @@ model = tf.keras.models.load_model('C:\\Users\\keena\\Documents\\University of A
 vae_test = model.predict(in_test)
 vae_test = 10**vae_test
 
-
+print(model.history.history)
 unique_test = np.array([7,1.5,25,1.75,43,250])
 unique_test = unique_test.reshape((1,6))
 unique_test = model(unique_test)
@@ -73,15 +73,15 @@ plt.title('New Unique Spectra vs Old')
 plt.savefig('New_generation.png', dpi=300)
 plt.clf()
 
-"""
-err_set_all = (vae_test[0]-out_test[0])/out_test[0]
+
+err_set_all = (vae_test[100]-out_test[100])/out_test[100]
 fig = plt.figure()
 gs  = gridspec.GridSpec(2, 1, height_ratios=[3,1])
 ax0 = plt.subplot(gs[0])
 ax1 = plt.subplot(gs[1],sharex=ax0)
 plt.subplots_adjust(wspace=0, hspace=0)
-ax0.loglog(wave, vae_test[0], 'r-',label = 'Generated Spectra')
-ax0.loglog(wave, out_test[0], 'b--', label = 'True Spectra')
+ax0.loglog(wave, vae_test[100], 'r-',label = 'Generated Spectra')
+ax0.loglog(wave, out_test[100], 'b--', label = 'True Spectra')
 ax1.plot(wave, err_set_all)
 ax1.set_xscale('log')
 
@@ -107,4 +107,3 @@ ax1.set_ylabel('Error')
 
 plt.savefig('Spectra_comparison_decoder.png', dpi=300, bbox_inches='tight')
 plt.clf()
-"""

@@ -1,25 +1,20 @@
 import numpy as np
 import h5py as h5
-import numpy as np 
-import scipy.stats
+import pandas as pd
 
-
-from keras.models import Model, load_model
-import keras.layers as layers
-import keras
-from keras import ops
-from keras.layers import Dense, LeakyReLU, Lambda, Input, Conv1D, MaxPooling1D, AveragePooling1D, UpSampling1D, Reshape, Flatten,Cropping1D
-from keras.callbacks import EarlyStopping, ModelCheckpoint
-from keras.utils import plot_model
+from keras.models import Model
+from keras.layers import Dense, LeakyReLU, Input
+from keras.callbacks import ModelCheckpoint
 from tensorflow import math as K
 import tensorflow as tf
+
 from sklearn.model_selection import train_test_split
 
 original_dim = 119
 latent_dim = 6
-batch_size = 64
+batch_size = 16
 epochs = 10
-
+"""
 
 infile = h5.File("C:\\Users\\keena\\Documents\\University of Arizona\\Jobs\\TIMESTEP NOIRLAB\\wise-agn\\pca\\clumpy_models_201410_tvavg.hdf5", 'r')
 output_flux = np.log10(infile['flux_tor'][:])
@@ -40,7 +35,7 @@ i = infile['dset']['i'][:]
 q = infile['dset']['q'][:]
 sig = infile['dset']['sig'][:]
 tv = infile['dset']['tv'][:]
-"""
+
 
 input_params = Y.reshape(len(Y),1)
 input_params = np.append(input_params, N0.reshape(len(N0),1),1)
@@ -53,7 +48,7 @@ input_params = np.append(input_params, tv.reshape(len(tv),1),1)
 in_temp, in_test, out_temp, out_test = train_test_split(input_params, output_flux, test_size=0.05, random_state=1)
 in_train, in_valid, out_train, out_valid = train_test_split(in_temp, out_temp, test_size=0.1, random_state=1)
 
-checkpointer = ModelCheckpoint('model_checkpoint.keras', verbose=1, save_best_only=True)
+checkpointer = ModelCheckpoint('model_checkpoint_subset.keras', verbose=1, save_best_only=True)
 
 decoder_inputs = Input(shape=(latent_dim,))
 decoded = Dense(32)(decoder_inputs)
@@ -67,7 +62,7 @@ decoder_outputs = Dense(original_dim)(decoded)
 vae = Model(inputs=decoder_inputs, outputs=decoder_outputs)
 vae.summary()
 
-vae.compile(optimizer='adam', loss='mse')
+vae.compile(optimizer='adam', loss='mse', metrics=['accuracy'])
 results = vae.fit(in_train, out_train,
                       shuffle=True,
                       batch_size = batch_size, 
@@ -75,4 +70,10 @@ results = vae.fit(in_train, out_train,
                       validation_data = (in_valid,out_valid),
                       callbacks = checkpointer)
 
-vae.save("C:\\Users\\keena\\Documents\\University of Arizona\\Jobs\\TIMESTEP NOIRLAB\\wise-agn\\autoencoder\\model_decoder.keras")
+
+df = pd.DataFrame(results.history)
+df.to_csv('history.csv', index = False)
+
+vae.save("C:\\Users\\keena\\Documents\\University of Arizona\\Jobs\\TIMESTEP NOIRLAB\\wise-agn\\autoencoder\\model_decoder_subset.keras")
+
+
