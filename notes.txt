@@ -15,8 +15,19 @@
 ########################################
 - Mid year check-in form for TIMESTEP
 - In run_pca.py, find outlier models/make histogram of errors for each spectra
-- autoencoder.py, change the inputs to be the correct parameters, outputs to be an SED
-    - Train to generate new SED if given new parameters
+- Run full new decoder on TACC
+- Test the new decoder and model for error percent
+    - maybe find some way to get a condfidence interval
+    - or do a similar error analysis to the PCA
+    - Test parameters not in original space
+
+
+########################################
+                COMPLETE
+########################################
+- COMPLETE: made the new decoder network with correct inputs and outputs. Testing in progress
+    - autoencoder.py, change the inputs to be the correct parameters, outputs to be an SED
+        - Train to generate new SED if given new parameters
 
 ########################################
                 PCA
@@ -36,8 +47,15 @@
                 AUTOENCODER
 ########################################
 ----- FILES -----
-- decoder_train.py
-    - Using tensorflow+keras
-    - Currently trains an variational autoencoder on the flux_tor values from the cut dataset
-    - Output tries to mimic SEDs, can vary input parameters to get intermediate SED not in 
-        original dataset, but parameters to vary are not original Y,N0,i,q,sig,tv parameters
+- train_decoder.py
+    - Using tensorflow + keras
+    - Currently trains a neural network to replicate SEDs given the 6 input parameters
+    - Takes the models_subset and trains on it using MSE to produce a model that should reproduce SEDs
+    - Saves the model to model_decoder.keras, with checkpoints every epoch that improves saved to 
+        model_checkpoints.keras
+
+- test_decoder.py
+    - Opens the saved model from train_decoder.py and loads the parameter set and true SEDs
+    - Overplots the SED generated from the model to the real SED, using the testing data
+    - Testing data is not used in training the model, so true generation without the real 
+        parameters or SED ever interacting with the training.
