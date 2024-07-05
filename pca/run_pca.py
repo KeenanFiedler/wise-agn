@@ -93,7 +93,7 @@ for i in [0, 6, 16, 26]:
 """
 
 #Plotting
-_, bins, _ = plt.hist(mse[0], bins=50, range=[0, 0.004], density = True, alpha = 0.3, label = str(n_comp[0]) + ' Components')
+_, bins, _ = plt.hist(mse[0], bins=30, range=[0, 0.004], density = True, alpha = 0.3, label = str(n_comp[0]) + ' Components')
 for i in range(1,len(n_comp)):
     plt.hist(mse[i], bins = bins, density = True, alpha = 0.3, label = str(n_comp[i]) + ' Components')
 plt.legend()

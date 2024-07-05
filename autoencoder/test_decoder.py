@@ -73,15 +73,62 @@ plt.title('New Unique Spectra vs Old')
 plt.savefig('New_generation.png', dpi=300)
 plt.clf()
 
-
-err_set_all = (vae_test[100]-out_test[100])/out_test[100]
+err_set_all = (vae_test-out_test)/out_test
+mse = np.array(np.mean(np.square(err_set_all), axis=1))
+spectra = np.argmax(mse)
+vae_test = vae_test[spectra]
+out_test = out_test[spectra]
+err_set_all = err_set_all[spectra]
+print(err_set_all)
 fig = plt.figure()
 gs  = gridspec.GridSpec(2, 1, height_ratios=[3,1])
 ax0 = plt.subplot(gs[0])
 ax1 = plt.subplot(gs[1],sharex=ax0)
 plt.subplots_adjust(wspace=0, hspace=0)
-ax0.loglog(wave, vae_test[100], 'r-',label = 'Generated Spectra')
-ax0.loglog(wave, out_test[100], 'b--', label = 'True Spectra')
+ax0.loglog(wave, vae_test, 'r-',label = 'Generated Spectra')
+ax0.loglog(wave, out_test, 'b--', label = 'True Spectra')
+ax1.plot(wave, err_set_all)
+ax1.set_xscale('log')
+
+xlim0 = ax0.get_xlim()
+ylim0 = ax0.get_ylim()
+xlim1 = ax1.get_xlim()
+ylim1 = ax1.get_ylim()
+
+ax1.fill_between(range(10000), -0.05, 0.05, alpha=0.25, color = 'k', linewidth=0.0)
+
+if ylim1[0] < 0 and ylim1[1] < 0:
+    val = math.floor(min(ylim1)*10)/10
+else:
+    val = math.ceil(max(ylim1)*10)/10
+
+
+ax0.set_xlim(xlim0)
+ax0.set_ylim(ylim0)
+ax1.set_xlim(xlim1)
+if val < 0:
+    ax1.set_ylim(val,val*-1)
+else:
+    ax1.set_ylim(val*-1,val)
+
+ax0.legend()
+ax0.title.set_text('Decoder Reconstruction of Spectra')
+plt.xlabel('Log Wavelength (Microns)')
+ax0.set_ylabel('Log Flux')
+ax1.set_ylabel('Error')
+
+plt.savefig('Spectra_comparison_max_err.png', dpi=300, bbox_inches='tight')
+plt.clf()
+##### PLOT SPECIFIC TEST SPECTRA
+"""
+err_set_all = (vae_test[10]-out_test[10])/out_test[10]
+fig = plt.figure()
+gs  = gridspec.GridSpec(2, 1, height_ratios=[3,1])
+ax0 = plt.subplot(gs[0])
+ax1 = plt.subplot(gs[1],sharex=ax0)
+plt.subplots_adjust(wspace=0, hspace=0)
+ax0.loglog(wave, vae_test[10], 'r-',label = 'Generated Spectra')
+ax0.loglog(wave, out_test[10], 'b--', label = 'True Spectra')
 ax1.plot(wave, err_set_all)
 ax1.set_xscale('log')
 
@@ -107,3 +154,4 @@ ax1.set_ylabel('Error')
 
 plt.savefig('Spectra_comparison_decoder.png', dpi=300, bbox_inches='tight')
 plt.clf()
+"""
