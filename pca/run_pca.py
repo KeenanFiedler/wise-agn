@@ -38,6 +38,7 @@ for amt in n_comp:
     Xhat += mu
     Xhat = 10**Xhat
 
+
     #Error Analysis
     err_set_all = np.abs((Xhat-flux))/flux
     mse_one = np.array(np.mean(np.square(err_set_all), axis=1))
