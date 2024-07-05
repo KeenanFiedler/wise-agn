@@ -13,18 +13,18 @@
 ########################################
                 TO DO
 ########################################
-- Mid year check-in form for TIMESTEP
-- In run_pca.py, find outlier models/make histogram of errors for each spectra
-- Run full new decoder on TACC
+- IN PROGRESS: Run full new decoder on TACC (JOB SUBMITTED)
 - Test the new decoder and model for error percent
     - maybe find some way to get a condfidence interval
     - or do a similar error analysis to the PCA
-    - Test parameters not in original space
+    - COMPELTE: Test parameters not in original space
 
 
 ########################################
                 COMPLETE
 ########################################
+- COMPLETE: Mid year check-in form for TIMESTEP
+- COMPLETE: In run_pca.py, find outlier models/make histogram of errors for each spectra
 - COMPLETE: made the new decoder network with correct inputs and outputs. Testing in progress
     - autoencoder.py, change the inputs to be the correct parameters, outputs to be an SED
         - Train to generate new SED if given new parameters
