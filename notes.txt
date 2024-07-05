@@ -16,7 +16,7 @@
 - IN PROGRESS: Run full new decoder on TACC (JOB SUBMITTED)
 - Test the new decoder and model for error percent
     - maybe find some way to get a condfidence interval
-    - or do a similar error analysis to the PCA
+    - COMPLETE: or do a similar error analysis to the PCA
     - COMPELTE: Test parameters not in original space
 
 
@@ -42,6 +42,8 @@
             - This creates (~1mill, 119) matrix reconstruction of original SEDs
     - Also creates plots for analyzing error and compression as the number of components increases
     - Can also analyze individual spectra
+- save_pca.py
+    - Saves an hdf5 file with the weights, components, wavelengths, and means for reconstructing
 
 ########################################
                 AUTOENCODER

@@ -89,7 +89,7 @@ flux = np.array(infile['flux_tor'][:])
 dataset = np.log10(np.array(infile['flux_tor'][:]))
 
 
-pca = PCA(n_components=10)
+pca = PCA(n_components=7)
 mu = np.mean(dataset, axis=0)
 pca.fit(dataset)
 weights = pca.transform(dataset)
@@ -103,12 +103,11 @@ Xhat = 10**Xhat
 err_set_PCA = np.abs((Xhat-flux))/flux
 mse_PCA = np.array(np.mean(np.square(err_set_PCA), axis=1))
 
-print(mse_PCA)
-print(mse)
 _, bins, _ = plt.hist(mse, bins = 30, range=[0, 0.004], density = True, alpha = 0.3, label = 'Decoder')
 plt.hist(mse_PCA, bins = bins, density = True, alpha = 0.3, label = 'PCA - 10 Components')
 plt.legend()
-plt.savefig('mse_10.png', dpi=300)
+plt.xlabel('Mean Square Error')
+plt.savefig('mse_7.png', dpi=300)
 plt.clf()
 """
 ##### CREATE PLOT OF SPECTRA WITH MOST ERROR
