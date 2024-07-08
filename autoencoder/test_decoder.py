@@ -50,10 +50,30 @@ input_params = np.append(input_params, tv.reshape(len(tv),1),1)
 in_temp, in_test, out_temp, out_test = train_test_split(input_params, output_flux, test_size=0.05, random_state=1)
 in_train, in_valid, out_train, out_valid = train_test_split(in_temp, out_temp, test_size=0.1, random_state=1)
 
-model = tf.keras.models.load_model('C:\\Users\\keena\\Documents\\University of Arizona\\Jobs\\TIMESTEP NOIRLAB\\wise-agn\\autoencoder\\model_checkpoint.keras')
+model = tf.keras.models.load_model('C:\\Users\\keena\\Documents\\University of Arizona\\Jobs\\TIMESTEP NOIRLAB\\wise-agn\\autoencoder\\model_decoder_gpu.keras')
 
-##### CREATE UNIQUE SPECTRA INBETWEEN
 """
+hist = pd.read_csv('history_gpu.csv', delimiter=',')
+print(hist)
+epochs = range(1,101)[1:]
+loss = hist['loss'][1:]
+val_loss = hist['val_loss'][1:]
+plt.plot(epochs,loss, label = 'Loss')
+plt.plot(epochs, val_loss, label = 'Validation Loss')
+plt.legend()
+plt.savefig('loss_3_layer.png', dpi = 300)
+plt.clf()
+
+accuracy = hist['accuracy'][1:]
+val_accuracy = hist['val_accuracy'][1:]
+plt.plot(epochs, accuracy, label = 'Accuracy')
+plt.plot(epochs, val_accuracy, label = 'Validation Accuracy')
+plt.legend()
+plt.savefig('accuracy_3_layer.png', dpi = 300)
+plt.clf()
+"""
+##### CREATE UNIQUE SPECTRA INBETWEEN
+
 vae_test = model.predict(in_test)
 vae_test = 10**vae_test
 
@@ -73,9 +93,9 @@ plt.legend()
 plt.xlabel('Log Wavelength')
 plt.ylabel('Log Flux')
 plt.title('New Unique Spectra vs Old')
-plt.savefig('New_generation.png', dpi=300)
+plt.savefig('New_generation_3_layer.png', dpi=300)
 plt.clf()
-"""
+
 
 in_flux = model.predict(input_params)
 in_flux = 10**in_flux
@@ -84,7 +104,7 @@ err_set_all = (in_flux-output_flux)/output_flux
 mse = np.array(np.mean(np.square(err_set_all), axis=1))
 
 ##### PLOT MEAN SQUARE ERROR VERSUS PCA MSE
-"""
+
 flux = np.array(infile['flux_tor'][:])
 dataset = np.log10(np.array(infile['flux_tor'][:]))
 
@@ -104,12 +124,12 @@ err_set_PCA = np.abs((Xhat-flux))/flux
 mse_PCA = np.array(np.mean(np.square(err_set_PCA), axis=1))
 
 _, bins, _ = plt.hist(mse, bins = 30, range=[0, 0.004], density = True, alpha = 0.3, label = 'Decoder')
-plt.hist(mse_PCA, bins = bins, density = True, alpha = 0.3, label = 'PCA - 10 Components')
+plt.hist(mse_PCA, bins = bins, density = True, alpha = 0.3, label = 'PCA - 7 Components')
 plt.legend()
 plt.xlabel('Mean Square Error')
-plt.savefig('mse_7.png', dpi=300)
+plt.savefig('mse_7_3_layer.png', dpi=300)
 plt.clf()
-"""
+
 ##### CREATE PLOT OF SPECTRA WITH MOST ERROR
 spectra = np.argmax(mse)
 in_flux = in_flux[spectra]
@@ -152,12 +172,12 @@ plt.xlabel('Log Wavelength (Microns)')
 ax0.set_ylabel('Log Flux')
 ax1.set_ylabel('Error')
 
-plt.savefig('Spectra_comparison_max_err.png', dpi=300, bbox_inches='tight')
+plt.savefig('Spectra_comparison_max_err_3_layer.png', dpi=300, bbox_inches='tight')
 plt.clf()
 
 
 ##### PLOT SPECIFIC TEST SPECTRA
-"""
+
 err_set_all = (vae_test[10]-out_test[10])/out_test[10]
 fig = plt.figure()
 gs  = gridspec.GridSpec(2, 1, height_ratios=[3,1])
@@ -189,6 +209,5 @@ plt.xlabel('Log Wavelength (Microns)')
 ax0.set_ylabel('Log Flux')
 ax1.set_ylabel('Error')
 
-plt.savefig('Spectra_comparison_decoder.png', dpi=300, bbox_inches='tight')
+plt.savefig('Spectra_comparison_decoder_3_layer.png', dpi=300, bbox_inches='tight')
 plt.clf()
-"""

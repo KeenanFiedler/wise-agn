@@ -18,9 +18,8 @@
     - maybe find some way to get a condfidence interval
     - COMPLETE: or do a similar error analysis to the PCA
     - COMPELTE: Test parameters not in original space
-- Run decoder with GPU, figure out CUDA
 - Plot out loss and accuracy functions
-- Find what accuracy is defined as 
+    - Find what accuracy is defined as 
 - Run model training with optimal epochs
 - Investigate Robert's programs
     - Run with already existing models
@@ -34,6 +33,7 @@
 - COMPLETE: made the new decoder network with correct inputs and outputs. Testing in progress
     - autoencoder.py, change the inputs to be the correct parameters, outputs to be an SED
         - Train to generate new SED if given new parameters
+- COMPLETE: Run decoder with GPU, figure out CUDA
 
 ########################################
                 PCA
