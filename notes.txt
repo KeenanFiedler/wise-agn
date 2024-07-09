@@ -23,7 +23,9 @@
 - Run model training with optimal epochs
 - Investigate Robert's programs
     - Run with already existing models
-
+- Plot color-color track with cos(i) for a model
+- Make random parameters space, uniform for all, and cos(i) not i
+- Find python package to see if value is in polygon
 
 ########################################
                 COMPLETE
