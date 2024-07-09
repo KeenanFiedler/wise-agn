@@ -13,18 +13,9 @@
 ########################################
                 TO DO
 ########################################
-- IN PROGRESS: Run full new decoder on TACC (JOB SUBMITTED)
-- Test the new decoder and model for error percent
-    - maybe find some way to get a condfidence interval
-    - COMPLETE: or do a similar error analysis to the PCA
-    - COMPELTE: Test parameters not in original space
-- Plot out loss and accuracy functions
-    - Find what accuracy is defined as 
-- Run model training with optimal epochs
 - Investigate Robert's programs
     - Run with already existing models
-- Plot color-color track with cos(i) for a model
-- Make random parameters space, uniform for all, and cos(i) not i
+- Scikit-learn regression models, Roberts regressions
 - Find python package to see if value is in polygon
 
 ########################################
@@ -36,6 +27,17 @@
     - autoencoder.py, change the inputs to be the correct parameters, outputs to be an SED
         - Train to generate new SED if given new parameters
 - COMPLETE: Run decoder with GPU, figure out CUDA
+- COMPLETE: Plot out loss and accuracy functions
+    - COMPLETE: Find what accuracy is defined as 
+- COMPLETE: Plot color-color track with cos(i) for a model
+    - COMPLETE: W2-W1, W3-W1 colors
+- COMPLETE: Make random parameters space, uniform for all, and cos(i) not i
+- COMPLETE: Run full new decoder on TACC
+- COMPLETE: Test the new decoder and model for error percent
+    - NOT VIABLE: maybe find some way to get a condfidence interval
+    - COMPLETE: or do a similar error analysis to the PCA
+    - COMPLETE: Test parameters not in original space
+- COMPLETE: Run model training with optimal epochs
 
 ########################################
                 PCA

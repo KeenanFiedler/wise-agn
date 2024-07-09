@@ -1,11 +1,17 @@
 import numpy as N
-import pylab as p
-import h5py
-import sys
-sys.path.append('')
-from interpolation import LogInterpolate
+import h5py as h5
+import scipy as sp
+import pandas as pd
+import matplotlib.pyplot as plt
 import filters
+from keras.models import load_model
+path = "C:\\Users\\keena\\Documents\\University of Arizona\\Jobs\\TIMESTEP NOIRLAB\\wise-agn\\"
 
+def LogInterpolate(zz, xx, yy):
+    logz = np.log10(zz)
+    logx = np.log10(xx)
+    logy = np.log10(yy)
+    return np.power(10.0, np.interp(logz, logx, logy))
 
 def flambda_bb(lam,T):
     """lam = wavelength in micron, T = BB temperature in K."""
@@ -31,12 +37,10 @@ def flambda_vega(lam):
     return flam_vega
 
 
-def get_filters(filterlib='/home/robert/science/sedfit/filters.hdf5',\
+def get_filters(filterlib=path+"regression\\filters.hdf5",
                 filternames=('wise-w1-3.4-r', 'wise-w2-4.6-r', 'wise-w3-12-r', 'wise-w4-22-r')):
 
     from scipy import integrate
-    import sys
-    sys.path.append('/home/robert/science/sedfit')
     import filters
 
     # filter lib
@@ -79,14 +83,18 @@ def get_filterfluxes(filters,vega_normalizations,wave,seds):
 
     for ised in range(nseds):
         sed = seds[ised,:]
-        ipt = LogInterpolate(wave,sed)  # filter interpolator
+        log_wave = N.log10(wave)
+        log_sed = N.log10(sed)
+        lin_interp = sp.interpolate.interp1d(log_wave, log_sed)
+        #ipt = LogInterpolate(wave,sed)  # filter interpolator
         
         # calculate Vega-normalized fuilter fluxes for the model, and write to HDF file
         # F_clumpy(W1)/F_vega(W1), F_clumpy(W2)/F_vega(W2), F_clumpy(W3)/F_vega(W3), F_clumpy(W4)/F_vega(W4)
         for ifilt,filt in enumerate(filters):
             
             # torus SED
-            fclumpyt_ip = ipt(filt.lam)   # clumpy model flux on the filter's wavelength grid
+            fclumpyt_ip = N.power(10.0, lin_interp(N.log10(filt.lam)))
+            #fclumpyt_ip = ipt(filt.lam)   # clumpy model flux on the filter's wavelength grid
             filtfluxt = integrate.simps(filt.phi * fclumpyt_ip, filt.lam)
             filterfluxes[ised,ifilt] = filtfluxt / vega_normalizations[ifilt]
 
@@ -105,5 +113,56 @@ def get_colors(filterfluxes):
 
     return colors
 
+def generate_seds(n_sed, min_array = [5.0,1.0,0.0,0.0,15.0,10.0], max_array = [100.0,15.0,1.0,3.0,70.0,300.0]):
+    random_draws = N.random.uniform(min_array, max_array, size=(n_sed,6))
+
+    model = load_model(path + 'autoencoder\\3layer_64\\model_decoder_gpu_64.keras')
+    fluxes = 10**model.predict(random_draws)
+
+    return fluxes
+
+def generate_colortrack(n_sed, wave, min_array = [5.0,1.0,0.0,0.0,15.0,10.0], max_array = [100.0,15.0,1.0,3.0,70.0,300.0]):
+    random_draws = N.random.uniform(min_array, max_array, size=(n_sed,6))
+    colortrack_array = N.zeros((n_sed,50,2))
+    for j in range(n_sed):
+        cosi = N.linspace(0,1,50)
+        i = N.degrees(N.arccos(cosi))
+        model_array = N.zeros((50,6))
+        model_array[:, 0] = random_draws[j][0]
+        model_array[:, 1] = random_draws[j][1]
+        model_array[:, 2] = i
+        model_array[:, 3:] = random_draws[j][3:]
+
+        model = load_model(path + 'autoencoder\\3layer_64\\model_decoder_gpu_64.keras')
+        fluxes = 10**model.predict(model_array)
+
+        N.save('colortrack_flux.npy', fluxes)
+
+        filters, vega_norm = get_filters()
+        colors = get_colors(get_filterfluxes(filters, vega_norm, wave, fluxes))
+        w21 = colors[:,0]
+        w32 = colors[:,1]
+
+        c = w21.reshape(len(w21),1)
+        c = N.append(c, w32.reshape(len(w32),1),1)
+        colortrack_array[j] = c
+    N.save('colortracks.npy', colortrack_array)
+        #colors_dataframe = pd.DataFrame({'i': model_array[:,2], 'W2-W1': colors[:, 0], 'W3-W2': colors[:, 1],'W4-W3': colors[:, 1]})
+        #colors_dataframe.to_csv('colortrack.csv', index = False)
 
 
+def main():
+    infile = h5.File(path + "pca\\clumpy_models_201410_tvavg.hdf5", 'r')
+    wave = infile['wave'][:]
+
+    filters, vega_norm = get_filters()
+    fluxes = generate_seds(10**6) #Generate seds using the machine learning model, 1 million seds in <15 seconds
+
+    colors = get_colors(get_filterfluxes(filters, vega_norm, wave, fluxes))
+    fluxes = None
+    #colors_dataframe = pd.DataFrame({'W2-W1': colors[:, 0], 'W3-W2': colors[:, 1],'W4-W3': colors[:, 1]})
+    N.save('colors.npy', colors)
+
+    #generate_colortrack(100, wave)
+
+main()
