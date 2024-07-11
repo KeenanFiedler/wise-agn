@@ -171,6 +171,6 @@ def main():
     colors = get_colors(get_filterfluxes(filters, vega_norm, wave, fluxes))
     N.save('model_colors.npy', colors)
 
-    generate_colortrack(100, wave)
+    #generate_colortrack(100, wave)
 
 main()
