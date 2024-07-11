@@ -6,19 +6,20 @@ import h5py as h5
 path = "C:\\Users\\keena\\Documents\\University of Arizona\\Jobs\\TIMESTEP NOIRLAB\\wise-agn\\"
 
 
+def plot_colors(filename):
+    colors = np.load(filename)
+    w21 = colors[:,0]
+    w32 = colors[:,1]
+    plt.hist2d(w21,w32, bins = (50,50))
+    plt.colorbar()
+    plt.xlabel('W2-W1')
+    plt.ylabel('W3-W2')
+    plt.title('Colors of Histogram')
+    plt.savefig(filename[:-4] + '_hist2d.png', dpi=300)
+    plt.clf()
 
-colors = np.load('colors.npy')
-print(colors.shape)
-w21 = colors[:,0]
-w32 = colors[:,1]
-print(w21.shape)
-plt.hist2d(w21,w32, bins = (50,50))
-plt.colorbar()
-plt.xlabel('W2-W1')
-plt.ylabel('W3-W2')
-plt.title('10^5 randomly generated SEDs Colors')
-plt.savefig('hist2d.png',dpi=300)
-plt.clf()
+plot_colors('clumpy_colors.npy')
+plot_colors('model_colors.npy')
 
 
 colortracks = np.load('colortracks.npy')
