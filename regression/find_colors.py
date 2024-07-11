@@ -116,7 +116,7 @@ def get_colors(filterfluxes):
 def generate_seds(n_sed, min_array = [5.0,1.0,0.0,0.0,15.0,10.0], max_array = [100.0,15.0,1.0,3.0,70.0,300.0]):
     # Draw random values in between the minimum and maximum parameters, of size requested
     random_draws = N.random.uniform(min_array, max_array, size=(n_sed,6))
-
+    print(N.min(random_draws, axis=0))
     # load machine learning model and find SEDs
     model = load_model(path + 'autoencoder\\3layer_64\\model_decoder_gpu_64.keras')
     fluxes = 10**model.predict(random_draws)

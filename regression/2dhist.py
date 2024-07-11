@@ -18,10 +18,12 @@ def plot_colors(filename):
     plt.savefig(filename[:-4] + '_hist2d.png', dpi=300)
     plt.clf()
 
+# 2-D Histogram
 plot_colors('clumpy_colors.npy')
 plot_colors('model_colors.npy')
 
 
+# Color Tracks
 colortracks = np.load('colortracks.npy')
 plasma = mpl.colormaps['plasma'].resampled(len(colortracks))
 k=0
