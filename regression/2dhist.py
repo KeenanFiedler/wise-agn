@@ -23,7 +23,7 @@ def plot_colors(filename):
     plt.colorbar()
     plt.xlabel('W2-W1')
     plt.ylabel('W3-W2')
-    plt.title('Colors of Histogram')
+    plt.title('Histogram of Colors')
     plt.savefig(filename[:-4] + '_hist2d.png', dpi=300)
     plt.clf()
 
