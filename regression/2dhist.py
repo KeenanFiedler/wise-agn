@@ -6,11 +6,20 @@ import h5py as h5
 path = "C:\\Users\\keena\\Documents\\University of Arizona\\Jobs\\TIMESTEP NOIRLAB\\wise-agn\\"
 
 
+colors = np.load('clumpy_colors.npy')
+w21 = colors[:,0]
+w32 = colors[:,1]
+ind = np.where((w21 > 2.2099) & (w32 > 5.89336))[0]
+w21 = w21[ind]
+print('Number of AGN in CLUMPY outside of range of model generator: ' + str(len(w21)))
+
 def plot_colors(filename):
     colors = np.load(filename)
+    colortracks = np.load('colortracks.npy')
     w21 = colors[:,0]
     w32 = colors[:,1]
     plt.hist2d(w21,w32, bins = (50,50))
+    plt.plot(colortracks[5][:,0], colortracks[5][:,1], color='r')
     plt.colorbar()
     plt.xlabel('W2-W1')
     plt.ylabel('W3-W2')
