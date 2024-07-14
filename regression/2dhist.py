@@ -8,8 +8,8 @@ path = "C:\\Users\\keena\\Documents\\University of Arizona\\Jobs\\TIMESTEP NOIRL
 
 colors = np.load('clumpy_colors.npy')
 w21 = colors[:,0]
-w32 = colors[:,1]
-ind = np.where((w21 > 2.2099) & (w32 > 5.89336))[0]
+w23 = colors[:,1]
+ind = np.where((w21 > 2.2099) & (w23 > 5.89336))[0]
 w21 = w21[ind]
 print('Number of AGN in CLUMPY outside of range of model generator: ' + str(len(w21)))
 
@@ -17,14 +17,14 @@ def plot_colors(filename):
     colors = np.load(filename)
     colortracks = np.load('colortracks.npy')
     w21 = colors[:,0]
-    w32 = colors[:,1]
-    plt.hist2d(w21,w32, bins = (50,50))
+    w23 = colors[:,1]
+    plt.hist2d(w23,w21, bins = (50,50), norm=mpl.colors.LogNorm())
     plt.plot(colortracks[5][:,0], colortracks[5][:,1], color='r')
     plt.colorbar()
-    plt.xlabel('W2-W1')
-    plt.ylabel('W3-W2')
+    plt.ylabel('W2-W1')
+    plt.xlabel('W2-W3')
     plt.title('Histogram of Colors')
-    plt.savefig(filename[:-4] + '_hist2d.png', dpi=300)
+    plt.savefig(filename[:-4] + '_hist2d.png', dpi=300, bbox_inches = 'tight')
     plt.clf()
 
 # 2-D Histogram
@@ -37,10 +37,10 @@ colortracks = np.load('colortracks.npy')
 plasma = mpl.colormaps['plasma'].resampled(len(colortracks))
 k=0
 for track in colortracks:
-    plt.plot(track[:,0], track[:,1],color= plasma(k/len(colortracks)))
+    plt.plot(track[:,1], track[:,0],color= plasma(k/len(colortracks)))
     k+=1
-plt.xlabel('W2-W1')
-plt.ylabel('W3-W2')
+plt.ylabel('W2-W1')
+plt.xlabel('W2-W3')
 plt.title('100 Colortracks')
 plt.savefig('colortracks.png',dpi=300)
 plt.clf()

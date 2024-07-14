@@ -13,8 +13,23 @@
 ########################################
                 TO DO
 ########################################
-- Scikit-learn regression models, Roberts regressions
 - Find python package to see if value is in polygon
+- COMPLETE: Sample of AGN, not all redshifts, take sdss+DESI crossmatched agn and save those data
+    - COMPLETE: save with z, zerr, flags, w1, w2
+    - redshift vs uncertainty of redshift
+    - cut to good reshift
+        - histogram of W1 mags
+        - histogram of redshift
+        - get gaussian fits, sample from those gaussian
+            - function to do these
+- For each random ML model sed
+    - redshift it
+    - draw random mag from gaussian to anchor
+    - do similar color adding to HOD galaxy color
+- Look at Scikit Learn linear model package
+    - LASSO, RIDGE, ELASTIC NET
+    - find cross-validatioon of combination
+- Write up emai labout TACC issues
 
 ########################################
                 COMPLETE
