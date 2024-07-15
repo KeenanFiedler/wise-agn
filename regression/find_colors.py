@@ -5,7 +5,15 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import filters
 from keras.models import load_model
+
 path = "C:\\Users\\keena\\Documents\\University of Arizona\\Jobs\\TIMESTEP NOIRLAB\\wise-agn\\"
+wave = [0.01,0.015,0.022,0.033,0.049,0.073,0.1,0.123,0.151,0.185,0.227,0.279,0.343,0.421,0.517,
+        0.55,0.635,0.78,0.958,1.18,1.45,1.77,2.18,2.68,3.29,4.04,4.96,6,6.25,6.5,6.75,7,7.25,7.5,
+        7.75,8,8.25,8.5,8.6,8.7,8.8,8.9,9,9.1,9.2,9.3,9.4,9.5,9.6,9.7,9.8,9.9,10,10.1,10.2,10.3,10.4,
+        10.5,10.6,10.7,10.8,10.9,11,11.1,11.2,11.3,11.4,11.5,11.8,12,12.3,12.5,12.8,13,13.3,13.5,13.8,
+        14,14.3,14.5,14.8,15,15.3,15.5,15.8,16,16.3,16.5,16.8,17,17.3,17.5,17.8,18,18.3,18.5,18.8,19,
+        19.3,19.5,19.8,20,20.9,25.6,31.5,38.7,47.5,58.3,71.6,87.9,108,133,163,200,204,304,452,672,1000]
+
 
 def LogInterpolate(zz, xx, yy):
     logz = np.log10(zz)
@@ -160,16 +168,33 @@ def generate_colortrack(n_sed, wave, min_array = [5.0,1.0,0.0,0.0,15.0,10.0], ma
     
     N.save('colortracks.npy', colortrack_array)
 
+def draw_normal(value, amount):
+    if value == 'z':
+        mu = 0.61221183
+        sig = 0.266072756
+    elif value == 'w1':
+        mu = 15.1287165
+        sig = 0.8749416
+    
+    return N.random.normal(mu, sig, amount)
+
+def get_mags(n, filters, vega_norm, wave):
+    w1 = draw_normal('w1', n)
+    fluxes = generate_seds(n)
+    colors = get_colors(get_filterfluxes(filters, vega_norm, wave, fluxes))
+    w2 = w1 - colors[:,0]
+    w3 = w2 - colors[:,1]
+    w4 = w3 - colors[:,2]
 
 def main():
-    infile = h5.File(path + "pca\\clumpy_models_201410_tvavg.hdf5", 'r')
-    wave = infile['wave'][:]
-
     filters, vega_norm = get_filters()
-    fluxes = generate_seds(10**6) #Generate seds using the machine learning model, 1 million seds in <15 seconds
+    mags = get_mags(10, filters, vega_norm, wave)
+    N.save('magnitudes.npy', mags)
 
-    colors = get_colors(get_filterfluxes(filters, vega_norm, wave, fluxes))
-    N.save('model_colors.npy', colors)
+    #fluxes = generate_seds(10) #Generate seds using the machine learning model, 1 million seds in <15 seconds
+
+    #colors = get_colors(get_filterfluxes(filters, vega_norm, wave, fluxes))
+    #N.save('model_colors.npy', colors)
 
     #generate_colortrack(100, wave)
 

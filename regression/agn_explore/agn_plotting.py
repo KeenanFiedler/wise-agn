@@ -45,6 +45,13 @@ def make_histogram(w1, z):
     plt.savefig('z_hist.png', dpi=300)
     plt.clf()
 
+def draw_normal(data, amount):
+    (mu, sig) = norm.fit(data)
+    print(mu)
+    print(sig)
+
+    return np.random.normal(mu,sig,amount)
+
 def main():
     desi = pd.read_csv('desi.csv')
     sdss = pd.read_csv('sdss.csv')
@@ -59,7 +66,9 @@ def main():
     w1 = np.array(sdss.t1_w1)
     w1 = np.append(w1, desi.t1_w1)
 
+
     #make_redshift_plot(sdss, 'sdss')
     make_histogram(w1, z)
+    draw_normal(w1,1)
 
 main()
