@@ -8,15 +8,7 @@ from matplotlib import gridspec
 import scipy.stats
 from sklearn.decomposition import PCA
 
-from keras.models import Model, load_model
-import keras.layers as layers
-import keras
-from keras import ops
-from keras.layers import Dense, LeakyReLU, Lambda, Input, Conv1D, MaxPooling1D, AveragePooling1D, UpSampling1D, Reshape, Flatten,Cropping1D
-from keras.callbacks import EarlyStopping, ModelCheckpoint
-from keras.utils import plot_model
-from tensorflow import math as K
-import tensorflow as tf
+from keras.models import load_model
 from sklearn.model_selection import train_test_split
 path ="C:\\Users\\keena\\Documents\\University of Arizona\\Jobs\\TIMESTEP NOIRLAB\\wise-agn\\"
 
@@ -50,10 +42,9 @@ input_params = np.append(input_params, tv.reshape(len(tv),1),1)
 in_temp, in_test, out_temp, out_test = train_test_split(input_params, output_flux, test_size=0.05, random_state=1)
 in_train, in_valid, out_train, out_valid = train_test_split(in_temp, out_temp, test_size=0.1, random_state=1)
 
-model = tf.keras.models.load_model(path + 'autoencoder\\conv_32\\model_decoder_conv_32.keras')
+model = load_model(path + 'autoencoder\\3layer_64\\model_decoder_gpu_64.keras')
 
-
-hist = pd.read_csv(path + 'autoencoder\\conv_32\\history_conv_32.csv', delimiter=',')
+hist = pd.read_csv(path + 'autoencoder\\3layer_64\\history_gpu_64.csv', delimiter=',')
 print(hist)
 epochs = range(1,101)[1:]
 loss = hist['loss'][1:]
@@ -61,7 +52,7 @@ val_loss = hist['val_loss'][1:]
 plt.plot(epochs,loss, label = 'Loss')
 plt.plot(epochs, val_loss, label = 'Validation Loss')
 plt.legend()
-plt.savefig(path + 'autoencoder\\conv_32\\loss_conv_32.png', dpi = 300)
+plt.savefig(path + 'autoencoder\\3layer_64\\loss_3_layer_64.png', dpi = 300)
 plt.clf()
 
 accuracy = hist['accuracy'][1:]
@@ -69,7 +60,7 @@ val_accuracy = hist['val_accuracy'][1:]
 plt.plot(epochs, accuracy, label = 'Accuracy')
 plt.plot(epochs, val_accuracy, label = 'Validation Accuracy')
 plt.legend()
-plt.savefig(path + 'autoencoder\\conv_32\\accuracy_conv_32.png', dpi = 300)
+plt.savefig(path + 'autoencoder\\3layer_64\\accuracy_3_layer_64.png', dpi = 300)
 plt.clf()
 
 ##### CREATE UNIQUE SPECTRA INBETWEEN
@@ -93,7 +84,7 @@ plt.legend()
 plt.xlabel('Log Wavelength')
 plt.ylabel('Log Flux')
 plt.title('New Unique Spectra vs Old')
-plt.savefig(path + 'autoencoder\\conv_32\\New_generation_conv_32.png', dpi=300)
+plt.savefig(path + 'autoencoder\\3layer_64\\New_generation_3_layer_64.png', dpi=300)
 plt.clf()
 
 
@@ -127,7 +118,7 @@ _, bins, _ = plt.hist(mse, bins = 30, range=[0, 0.004], density = True, alpha = 
 plt.hist(mse_PCA, bins = bins, density = True, alpha = 0.3, label = 'PCA - 7 Components')
 plt.legend()
 plt.xlabel('Mean Square Error')
-plt.savefig(path + 'autoencoder\\conv_32\\mse_7_conv_32.png', dpi=300)
+plt.savefig(path + 'autoencoder\\3layer_64\\mse_7_3_layer_64.png', dpi=300)
 plt.clf()
 
 ##### CREATE PLOT OF SPECTRA WITH MOST ERROR
@@ -172,7 +163,7 @@ plt.xlabel('Log Wavelength (Microns)')
 ax0.set_ylabel('Log Flux')
 ax1.set_ylabel('Error')
 
-plt.savefig(path + 'autoencoder\\conv_32\\Spectra_comparison_max_err_conv_32.png', dpi=300, bbox_inches='tight')
+plt.savefig(path + 'autoencoder\\3layer_64\\Spectra_comparison_max_err_3_layer_64.png', dpi=300, bbox_inches='tight')
 plt.clf()
 
 
@@ -209,5 +200,5 @@ plt.xlabel('Log Wavelength (Microns)')
 ax0.set_ylabel('Log Flux')
 ax1.set_ylabel('Error')
 
-plt.savefig(path + 'autoencoder\\conv_32\\Spectra_comparison_decoder_conv_32.png', dpi=300, bbox_inches='tight')
+plt.savefig(path + 'autoencoder\\3layer_64\\Spectra_comparison_decoder_3_layer_64.png', dpi=300, bbox_inches='tight')
 plt.clf()

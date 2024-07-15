@@ -13,6 +13,7 @@
 ########################################
                 TO DO
 ########################################
+- Ask robert about the presentation
 - Find python package to see if value is in polygon
 - COMPLETE: Sample of AGN, not all redshifts, take sdss+DESI crossmatched agn and save those data
     - COMPLETE: save with z, zerr, flags, w1, w2
