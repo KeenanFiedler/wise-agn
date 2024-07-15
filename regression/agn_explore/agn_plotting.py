@@ -21,10 +21,7 @@ def make_redshift_plot(data, survey):
     plt.savefig(survey + '_redshift.png', dpi=300)
     plt.clf()
 
-def make_histogram(data, survey):
-    w1 = data.t1_w1
-    z = data.z
-
+def make_histogram(w1, z):
     (w1_mu, w1_sig) = norm.fit(w1)
     (z_mu, z_sig) = norm.fit(z)
 
@@ -35,7 +32,7 @@ def make_histogram(data, survey):
 
     plt.xlabel('W1 Magnitude')
     plt.title('W1 Magnitude Histogram')
-    plt.savefig(survey + '_w1_hist.png', dpi=300)
+    plt.savefig('w1_hist.png', dpi=300)
     plt.clf()
 
     _, bins, _ = plt.hist(z, bins=40, density=True)
@@ -45,7 +42,7 @@ def make_histogram(data, survey):
 
     plt.xlabel('Redshift')
     plt.title('Redshift Histogram')
-    plt.savefig(survey + '_z_hist.png', dpi=300)
+    plt.savefig('z_hist.png', dpi=300)
     plt.clf()
 
 def main():
@@ -57,8 +54,12 @@ def main():
     sdss = sdss[ind_sdss]
     desi = desi[ind_desi]
 
+    z = np.array(sdss.z)
+    z = np.append(z, desi.z)
+    w1 = np.array(sdss.t1_w1)
+    w1 = np.append(w1, desi.t1_w1)
+
     #make_redshift_plot(sdss, 'sdss')
-    make_histogram(desi, 'desi')
-    make_histogram(sdss, 'sdss')
+    make_histogram(w1, z)
 
 main()
