@@ -170,11 +170,11 @@ def generate_colortrack(n_sed, wave, min_array = [5.0,1.0,0.0,0.0,15.0,10.0], ma
 
 def draw_normal(value, amount):
     if value == 'z':
-        mu = 0.61221183
-        sig = 0.266072756
+        mu = 0.61274080
+        sig = 0.26551053
     elif value == 'w1':
-        mu = 15.1287165
-        sig = 0.8749416
+        mu = 15.1269908
+        sig = 0.87389070
     
     return N.random.normal(mu, sig, amount)
 

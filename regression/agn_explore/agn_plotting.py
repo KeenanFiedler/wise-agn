@@ -10,11 +10,11 @@ from scipy.stats import norm
 def make_redshift_plot(data, survey):
     z = np.array(data.z)
     zerr = np.array(data.zerr)
-    ind = np.where((zerr<20))[0]
+    ind = np.where((zerr<0.005) & (zerr>0))[0]
     z=z[ind]
     zerr=zerr[ind]
 
-    plt.scatter(z, zerr)
+    plt.scatter(z, zerr, s=0.5, linewidths=0)
     plt.xlabel('Redshift')
     plt.ylabel('Redshift Error')
     plt.title('Redshift vs Error')
@@ -60,7 +60,10 @@ def main():
     ind_desi = desi.z<1
     sdss = sdss[ind_sdss]
     desi = desi[ind_desi]
-
+    ind_sdss = sdss.zerr<0.005
+    ind_desi = desi.zerr<0.005
+    sdss = sdss[ind_sdss]
+    desi = desi[ind_desi]
     z = np.array(sdss.z)
     z = np.append(z, desi.z)
     w1 = np.array(sdss.t1_w1)
@@ -69,6 +72,6 @@ def main():
 
     #make_redshift_plot(sdss, 'sdss')
     make_histogram(w1, z)
-    draw_normal(w1,1)
+    draw_normal(z,1)
 
 main()
