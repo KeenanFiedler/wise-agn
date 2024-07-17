@@ -33,11 +33,11 @@
             -0.1 maybe 0.05
         - Y is the model parameters, X is the hit or miss matrix
             - find weights to make it true
-- exclude bad data from w1/redshift
-- Empirical sampling
-    - skewed gaussian for w1
-    - cdf for redshift
-    - reproduce real histograms with sampler
+- COMPLETE: exclude bad data from w1/redshift
+- COMPLETE: Empirical sampling
+    - COMPLETE: skewed gaussian for w1
+    - COMPLETE: cdf for redshift
+    - COMPLETE: reproduce real histograms with sampler
 - outline of presentation
 
 

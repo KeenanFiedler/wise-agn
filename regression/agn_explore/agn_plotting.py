@@ -7,6 +7,7 @@ import matplotlib.mlab as mlab
 
 from scipy.stats import norm
 from scipy.stats import skewnorm
+from scipy.stats import ecdf
 
 def make_redshift_plot(data, survey):
     z = np.array(data.z)
@@ -28,8 +29,13 @@ def make_histogram(w1, z):
 
     _, bins, _ = plt.hist(w1, bins=40, density=True)
 
+    # Over plot line of skewnorm pdf
     w1_norm = skewnorm.pdf(bins, w1_mu, w1_sig, w1_skew)
-    plt.plot(bins, w1_norm, 'r--', linewidth=2)
+    plt.plot(bins, w1_norm, 'r--')
+
+    # Over plot histogram of random samples
+    random_draws = skewnorm.rvs(w1_mu, w1_sig, w1_skew, size=100000)
+    plt.hist(random_draws, bins=40, alpha=0.25, density = True)
 
     plt.xlabel('W1 Magnitude')
     plt.title('W1 Magnitude Histogram')
@@ -38,8 +44,27 @@ def make_histogram(w1, z):
 
     _, bins, _ = plt.hist(z, bins=40, density=True)
 
-    z_norm = norm.pdf(bins, z_mu, z_sig)
-    plt.plot(bins, z_norm, 'r--', linewidth=2)
+    # Get ECDF
+    z_ecdf = ecdf(z)
+
+    # Create cdf values for each redshift value
+    x = np.linspace(0,3,10000)
+    y = z_ecdf.cdf.evaluate(x)
+
+    # Plot PDF on top
+    pdf_y =z_ecdf.cdf.evaluate(bins)
+    pdf = np.gradient(pdf_y,bins)
+    plt.plot(bins, pdf, 'r--')
+
+    # Draw randomly from cdf to create pdf
+    x_est = []
+    for i in range(10000):
+        rand = np.random.uniform(0,1)
+        for i in range(len(y)):
+            if y[i]>rand:
+                break
+        x_est.append(x[i])
+    plt.hist(x_est, bins=40, density = True, alpha=0.25)
 
     plt.xlabel('Redshift')
     plt.title('Redshift Histogram')
