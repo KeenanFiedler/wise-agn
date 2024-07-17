@@ -11,16 +11,35 @@
     - try to fiddle around some more
 
 ########################################
+        AUGUST 5th PRESENTATION
+########################################
+- maybe 25 min, or 15 min
+- 1 slide per min, one good figure, maybe oneliner text
+- speaker NOTES
+- titles are the point of the slide not title
+- myabe github actions, then agn
+    - what we do and why
+    - details
+
+########################################
                 TO DO
 ########################################
-- Ask robert about the presentation
-- For each random ML model sed
-    - redshift it
-    - COMPLETE: draw random mag from gaussian to anchor
-    - COMPLETE: do similar color adding to HOD galaxy color
-- Look at Scikit Learn linear model package
-    - LASSO, RIDGE, ELASTIC NET
-    - find cross-validation of combination
+- VECTOR goes to COLORTRACK
+    - find linear combination of color color track contribute to 
+    - for each colortrack, detemine which bins of colorcolor space it occupies
+        - regression
+        - hit or miss matrix, which cells of color color space are hit by each colortrack
+        - divide color color into mag bins, determine which bins it falls into, make this a parameter
+            -0.1 maybe 0.05
+        - Y is the model parameters, X is the hit or miss matrix
+            - find weights to make it true
+- exclude bad data from w1/redshift
+- Empirical sampling
+    - skewed gaussian for w1
+    - cdf for redshift
+    - reproduce real histograms with sampler
+- outline of presentation
+
 
 ########################################
                 COMPLETE
@@ -53,6 +72,14 @@
         - Complete: get gaussian fits, sample from those gaussian
             - COMPLETE: function to do these
 - COMPLETE: Find python package to see if value is in polygon
+- COMEPLETE: For each random ML model sed
+    - NOT DONE:redshift it
+    - COMPLETE: draw random mag from gaussian to anchor
+    - COMPLETE: do similar color adding to HOD galaxy color
+- COMPLETE: Look at Scikit Learn linear model package
+    - COMPLETE: LASSO, RIDGE, ELASTIC NET
+    - COMPLETE: find cross-validation of combination
+- COMPELTE: Ask robert about the presentation
 
 ########################################
                 PCA
