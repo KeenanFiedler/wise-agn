@@ -1,10 +1,19 @@
-import numpy as N
+import numpy as np
 import h5py as h5
 import scipy as sp
 import pandas as pd
+import geopandas as gpd
+
 import matplotlib.pyplot as plt
+
 import filters
+
 from keras.models import load_model
+
+import shapely
+from shapely.geometry import Point
+from shapely.geometry.polygon import Polygon
+
 
 path = "C:\\Users\\keena\\Documents\\University of Arizona\\Jobs\\TIMESTEP NOIRLAB\\wise-agn\\"
 wave = [0.01,0.015,0.022,0.033,0.049,0.073,0.1,0.123,0.151,0.185,0.227,0.279,0.343,0.421,0.517,
@@ -14,13 +23,41 @@ wave = [0.01,0.015,0.022,0.033,0.049,0.073,0.1,0.123,0.151,0.185,0.227,0.279,0.3
         14,14.3,14.5,14.8,15,15.3,15.5,15.8,16,16.3,16.5,16.8,17,17.3,17.5,17.8,18,18.3,18.5,18.8,19,
         19.3,19.5,19.8,20,20.9,25.6,31.5,38.7,47.5,58.3,71.6,87.9,108,133,163,200,204,304,452,672,1000]
 
-
+""" HELPER FUNCTIONS """
 def LogInterpolate(zz, xx, yy):
     logz = np.log10(zz)
     logx = np.log10(xx)
     logy = np.log10(yy)
     return np.power(10.0, np.interp(logz, logx, logy))
 
+def points_in_polygon(x, y, vertices):
+    points = gpd.GeoDataFrame(geometry = gpd.points_from_xy(x, y))
+    polygon = Polygon(vertices)
+
+    return shapely.contains(polygon, points)
+
+
+""" MAGNITUDE FUNCTIONS """
+def draw_normal(value, amount):
+    if value == 'z':
+        mu = 0.61274080
+        sig = 0.26551053
+    elif value == 'w1':
+        mu = 15.1269908
+        sig = 0.87389070
+    
+    return np.random.normal(mu, sig, amount)
+
+def get_mags(n, filters, vega_norm, wave):
+    w1 = draw_normal('w1', n)
+    fluxes = generate_seds(n)
+    colors = get_colors(get_filterfluxes(filters, vega_norm, wave, fluxes))
+    w2 = w1 - colors[:,0]
+    w3 = w2 - colors[:,1]
+    w4 = w3 - colors[:,2]
+
+
+""" FILTER FUNCTIONS """
 def flambda_bb(lam,T):
     """lam = wavelength in micron, T = BB temperature in K."""
 
@@ -31,19 +68,17 @@ def flambda_bb(lam,T):
     lam_ = lam * 1.e-6
 
     aux1 = (2. * h * c) / (lam_**5.)
-    aux2 = 1. / (N.exp( h * c / (lam_ * k * T) ) - 1.)
+    aux2 = 1. / (np.exp( h * c / (lam_ * k * T) ) - 1.)
     B_lam = aux1 * aux2
 
     return B_lam
 
-
 def flambda_vega(lam):
     """Vega flux F_lambda according to Eq. 2 in Wright et al. 2010"""
 
-    flam_vega = 1.0158e-16 * (1. - 0.0083 * N.log(lam/8.891)**2.) * flambda_bb(lam,14454.)
+    flam_vega = 1.0158e-16 * (1. - 0.0083 * np.log(lam/8.891)**2.) * flambda_bb(lam,14454.)
 
     return flam_vega
-
 
 def get_filters(filterlib=path+"regression\\filters.hdf5",
                 filternames=('wise-w1-3.4-r', 'wise-w2-4.6-r', 'wise-w3-12-r', 'wise-w4-22-r')):
@@ -62,7 +97,6 @@ def get_filters(filterlib=path+"regression\\filters.hdf5",
         vega_normalizations.append(aux)
 
     return filters, vega_normalizations
-
 
 def get_filterfluxes(filters,vega_normalizations,wave,seds):
 
@@ -87,12 +121,12 @@ def get_filterfluxes(filters,vega_normalizations,wave,seds):
     from scipy import integrate
 
     nseds = seds.shape[0]
-    filterfluxes = N.zeros((nseds,len(filters)))
+    filterfluxes = np.zeros((nseds,len(filters)))
 
     for ised in range(nseds):
         sed = seds[ised,:]
-        log_wave = N.log10(wave)
-        log_sed = N.log10(sed)
+        log_wave = np.log10(wave)
+        log_sed = np.log10(sed)
         lin_interp = sp.interpolate.interp1d(log_wave, log_sed)
         #ipt = LogInterpolate(wave,sed)  # filter interpolator
         
@@ -101,29 +135,29 @@ def get_filterfluxes(filters,vega_normalizations,wave,seds):
         for ifilt,filt in enumerate(filters):
             
             # torus SED
-            fclumpyt_ip = N.power(10.0, lin_interp(N.log10(filt.lam)))
+            fclumpyt_ip = np.power(10.0, lin_interp(np.log10(filt.lam)))
             #fclumpyt_ip = ipt(filt.lam)   # clumpy model flux on the filter's wavelength grid
             filtfluxt = integrate.simps(filt.phi * fclumpyt_ip, filt.lam)
             filterfluxes[ised,ifilt] = filtfluxt / vega_normalizations[ifilt]
 
     return filterfluxes
 
-
 def get_colors(filterfluxes):
 
     nseds = filterfluxes.shape[0]
     ncolors = filterfluxes.shape[1] - 1
 
-    colors = N.zeros((nseds,ncolors))
+    colors = np.zeros((nseds,ncolors))
 
     for j in range(ncolors):
-        colors[:,j] = 2.5*N.log10(filterfluxes[:,j+1]/filterfluxes[:,j])
+        colors[:,j] = 2.5*np.log10(filterfluxes[:,j+1]/filterfluxes[:,j])
 
     return colors
 
+""" GENERATING FUNCTIONS """
 def generate_seds(n_sed, min_array = [5.0,1.0,0.0,0.0,15.0,10.0], max_array = [100.0,15.0,1.0,3.0,70.0,300.0]):
     # Draw random values in between the minimum and maximum parameters, of size requested
-    random_draws = N.random.uniform(min_array, max_array, size=(n_sed,6))
+    random_draws = np.random.uniform(min_array, max_array, size=(n_sed,6))
     
     # load machine learning model and find SEDs
     model = load_model(path + 'autoencoder\\3layer_64\\model_decoder_gpu_64.keras')
@@ -131,70 +165,125 @@ def generate_seds(n_sed, min_array = [5.0,1.0,0.0,0.0,15.0,10.0], max_array = [1
 
     return fluxes
 
-def generate_colortrack(n_sed, wave, min_array = [5.0,1.0,0.0,0.0,15.0,10.0], max_array = [100.0,15.0,1.0,3.0,70.0,300.0]):
+def generate_colortrack(n_sed, n_cos, wave, min_array = [5.0,1.0,0.0,0.0,15.0,10.0], max_array = [100.0,15.0,1.0,3.0,70.0,300.0]):
     # Draw random values in between the minimum and maximum parameters, of size requested
-    random_draws = N.random.uniform(min_array, max_array, size=(n_sed,6))
-
-    #Set up
-    colortrack_array = N.zeros((n_sed,50,2))
+    random_draws = np.random.uniform(min_array, max_array, size=(n_sed,6))
     filters, vega_norm = get_filters()
 
+    # Set up large array for quicker model drawing with n_sed*n_cos models
+    cosi = np.linspace(0,1,n_cos) # linear spaced in cos(i)
+    i = np.degrees(np.arccos(cosi))
+    long_sed_params = np.repeat(random_draws, repeats=n_cos, axis=0)
+    print(long_sed_params.shape)
+    long_sed_params[:, 2] = np.tile(i, long_sed_params.shape[0] // i.shape[0])
+
+    #Predict
+    model = load_model(path + 'autoencoder\\3layer_64\\model_decoder_gpu_64.keras')
+    fluxes = 10**model.predict(long_sed_params)
+    print(fluxes.shape)
+    #Split back into colortracks
+    indices = np.arange(n_cos, fluxes.shape[0], n_cos)
+    fluxes = np.array(np.array_split(fluxes, indices, 0))
+    #fluxes = np.array(np.array_split(fluxes, n_cos))
+    colortrack_array = np.zeros((n_sed,n_cos,2))
+
     for j in range(n_sed):
-        #Set up array of parameters with evenly distributed cos(i)
-        cosi = N.linspace(0,1,50)
-        i = N.degrees(N.arccos(cosi))
-        model_array = N.zeros((50,6))
-        model_array[:, 0] = random_draws[j][0]
-        model_array[:, 1] = random_draws[j][1]
-        model_array[:, 2] = i
-        model_array[:, 3:] = random_draws[j][3:]
-
-        # Load and draw from model
-        model = load_model(path + 'autoencoder\\3layer_64\\model_decoder_gpu_64.keras')
-        fluxes = 10**model.predict(model_array)
-
+        flux_for_color = fluxes[j,:,:]
         # Save to plot SED as function of i
-        N.save('colortrack_flux.npy', fluxes)
+        np.save('colortrack_flux.npy', flux_for_color)
 
         # Get colors
-        colors = get_colors(get_filterfluxes(filters, vega_norm, wave, fluxes))
+        colors = get_colors(get_filterfluxes(filters, vega_norm, wave, flux_for_color))
         w21 = colors[:,0]
         w32 = colors[:,1]
 
         # Append colortrack to full array of color tracks
         c = w21.reshape(len(w21),1)
-        c = N.append(c, w32.reshape(len(w32),1),1)
+        c = np.append(c, w32.reshape(len(w32),1),1)
         colortrack_array[j] = c
     
-    N.save('colortracks.npy', colortrack_array)
+    return colortrack_array, random_draws
 
-def draw_normal(value, amount):
-    if value == 'z':
-        mu = 0.61274080
-        sig = 0.26551053
-    elif value == 'w1':
-        mu = 15.1269908
-        sig = 0.87389070
+
+def get_models_in_polygon(t1_vert, t2_vert, n_sed, n_cos):
+    """
+    0) Initialize filters and output array
+    Loop over (random, dynamically generated) models:
+    1) Generate a random parameter vector (tv,N0,q,sig,Y) in generate_colortrack()
+    2) Generate n_cos (n_cos=100 or so) random viewings to that model (uniform in cos(i)). in generate_colortrack()
+    3) For all M random viewings generate an SED in generate_colortrack()
+    4) For all M SEDs, calculate colors x=W2-W3, y=W1-W2 in generate_colortrack()
+    5) Find all model+viewing combos which have x,y colors in the blue region (i.e. "IR-classified type-1 region").
+       and simultaneously have viewings with colors in type-2 (red) region.
+    6) Go to 1), and repeat N times (maybe a 1e5 or 1e6 times)
+    """
+    #Setup
+    filters, vega_normalizations = get_filters()
+    colortracks, params = generate_colortrack(n_sed,n_cos,wave)
+    #Output Arrays
+    agn_tracks = np.zeros((1,n_cos,2))
+    agn_params = np.zeros((1,6))
+    j=0
+    k=0
+    #Find all viewings which have colors in type1-region ('blue box'), and simultaneously in type2-region ('red box')
+    for i in range(colortracks.shape[0]):
+        track = colortracks[i]
+        param = params[i]
+        #Check if the points of the color track are in the type1/2 boxes
+        in_polygon = pd.DataFrame()
+        in_polygon['t1'] = points_in_polygon(track[:,1], track[:,0], t1_vert)
+        in_polygon['t2'] = points_in_polygon(track[:,1], track[:,0], t2_vert)
+
+        #Plotting colortrack
+
+        #If the track is in type 1 and type 2 boxes, add it to the list
+        if (True in in_polygon['t1'].values) and (True in in_polygon['t2'].values):
+            agn_tracks = np.append(agn_tracks, track[None, :, :], axis = 0)
+            agn_params = np.append(agn_params, param[None,:], axis = 0)
+            if j == 0:
+                plt.plot(track[:,1], track[:,0], 'g', label = 'AGN-like', lw=0.5)
+                j+=1
+            else:
+                plt.plot(track[:,1], track[:,0], 'g', lw=0.5)
+        else:
+            if k == 0:
+                plt.plot(track[:,1], track[:,0], 'r--', label = 'Not AGN-like', lw=0.5)
+                k+=1
+            else:
+                plt.plot(track[:,1], track[:,0], 'r--', lw=0.5)
     
-    return N.random.normal(mu, sig, amount)
+    #Drawing polygons for plot
+    t1_poly = Polygon(t1_vert)
+    t2_poly = Polygon(t2_vert)
+    plt.plot(*t1_poly.exterior.xy, 'b:', label = 'Type 1 AGN')
+    plt.plot(*t2_poly.exterior.xy, 'k:', label = 'Type 2 AGN')
+    plt.legend()
+    plt.xlabel('W2-W3')
+    plt.ylabel('W1-W2')
+    plt.title('Models whose evolution over viewing angle lies in Type 1 and Type 2')
+    plt.savefig('polygons.png', dpi=300)
+    plt.clf()
 
-def get_mags(n, filters, vega_norm, wave):
-    w1 = draw_normal('w1', n)
-    fluxes = generate_seds(n)
-    colors = get_colors(get_filterfluxes(filters, vega_norm, wave, fluxes))
-    w2 = w1 - colors[:,0]
-    w3 = w2 - colors[:,1]
-    w4 = w3 - colors[:,2]
+    #Cut out zero first element (Try to fix needing this step later)
+    agn_tracks = agn_tracks[1:]
+    agn_params = agn_params[1:]
+
+    return agn_tracks, agn_params
+
 
 def main():
-    filters, vega_norm = get_filters()
-    mags = get_mags(10, filters, vega_norm, wave)
-    N.save('magnitudes.npy', mags)
+    t1_vert = [(2.5,1.0),(2.5,1.5),(3.5,1.5),(3.5,1.0),(2.5,1.0)]
+    t2_vert = [(4.0,2.0),(4.0,3.0),(5.0,3.0),(5.0,2.0),(4.0,2.0)]
+
+    get_models_in_polygon(t1_vert,t2_vert,100,100)
+
+    #mags = get_mags(10, filters, vega_norm, wave)
+    #np.save('magnitudes.npy', mags)
 
     #fluxes = generate_seds(10) #Generate seds using the machine learning model, 1 million seds in <15 seconds
 
     #colors = get_colors(get_filterfluxes(filters, vega_norm, wave, fluxes))
-    #N.save('model_colors.npy', colors)
+    #np.save('model_colors.npy', colors)
 
     #generate_colortrack(100, wave)
 

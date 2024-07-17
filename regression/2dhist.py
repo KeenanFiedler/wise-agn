@@ -3,8 +3,15 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import h5py as h5
+import shapely
+from shapely.geometry import Point
+from shapely.geometry.polygon import Polygon
 path = "C:\\Users\\keena\\Documents\\University of Arizona\\Jobs\\TIMESTEP NOIRLAB\\wise-agn\\"
 
+
+
+t1_vert = [(2.5,1.0),(2.5,1.5),(3.5,1.5),(3.5,1.0),(2.5,1.0)]
+t2_vert = [(4.0,2.0),(4.0,3.0),(5.0,3.0),(5.0,2.0),(4.0,2.0)]
 
 colors = np.load('clumpy_colors.npy')
 w21 = colors[:,0]
@@ -15,14 +22,17 @@ print('Number of AGN in CLUMPY outside of range of model generator: ' + str(len(
 
 def plot_colors(filename):
     colors = np.load(filename)
-    colortracks = np.load('colortracks.npy')
     w21 = colors[:,0]
     w23 = colors[:,1]
     plt.hist2d(w23,w21, bins = (50,50), norm=mpl.colors.LogNorm())
-    plt.plot(colortracks[5][:,0], colortracks[5][:,1], color='r')
+    t1_poly = Polygon(t1_vert)
+    t2_poly = Polygon(t2_vert)
+    plt.plot(*t1_poly.exterior.xy, 'r:', label = 'Type 1 AGN')
+    plt.plot(*t2_poly.exterior.xy, 'k:', label = 'Type 2 AGN')
     plt.colorbar()
     plt.ylabel('W2-W1')
     plt.xlabel('W2-W3')
+    plt.legend()
     plt.title('Histogram of Colors')
     plt.savefig(filename[:-4] + '_hist2d.png', dpi=300, bbox_inches = 'tight')
     plt.clf()
@@ -31,7 +41,7 @@ def plot_colors(filename):
 plot_colors('clumpy_colors.npy')
 plot_colors('model_colors.npy')
 
-
+"""
 # Color Tracks
 colortracks = np.load('colortracks.npy')
 plasma = mpl.colormaps['plasma'].resampled(len(colortracks))
@@ -61,3 +71,4 @@ plt.ylabel('Log Flux')
 plt.title('Evolution of SED as function of i')
 plt.savefig('cosi_evolution_sed.png', dpi=300)
 plt.clf()
+"""

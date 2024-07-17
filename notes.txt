@@ -14,7 +14,6 @@
                 TO DO
 ########################################
 - Ask robert about the presentation
-- Find python package to see if value is in polygon
 - For each random ML model sed
     - redshift it
     - COMPLETE: draw random mag from gaussian to anchor
@@ -22,7 +21,6 @@
 - Look at Scikit Learn linear model package
     - LASSO, RIDGE, ELASTIC NET
     - find cross-validation of combination
-- Write up emai labout TACC issues
 
 ########################################
                 COMPLETE
@@ -54,6 +52,7 @@
         - COMPLETE: histogram of redshift
         - Complete: get gaussian fits, sample from those gaussian
             - COMPLETE: function to do these
+- COMPLETE: Find python package to see if value is in polygon
 
 ########################################
                 PCA
