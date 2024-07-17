@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import bisect
 
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -35,7 +36,7 @@ def make_histogram(w1, z):
 
     # Over plot histogram of random samples
     random_draws = skewnorm.rvs(w1_mu, w1_sig, w1_skew, size=100000)
-    plt.hist(random_draws, bins=40, alpha=0.25, density = True)
+    plt.hist(random_draws, bins=40, alpha=0.5, density = True)
 
     plt.xlabel('W1 Magnitude')
     plt.title('W1 Magnitude Histogram')
@@ -48,7 +49,7 @@ def make_histogram(w1, z):
     z_ecdf = ecdf(z)
 
     # Create cdf values for each redshift value
-    x = np.linspace(0,3,10000)
+    x = np.linspace(0,3,1000)
     y = z_ecdf.cdf.evaluate(x)
 
     # Plot PDF on top
@@ -58,13 +59,11 @@ def make_histogram(w1, z):
 
     # Draw randomly from cdf to create pdf
     x_est = []
-    for i in range(10000):
+    for i in range(10**6):
         rand = np.random.uniform(0,1)
-        for i in range(len(y)):
-            if y[i]>rand:
-                break
-        x_est.append(x[i])
-    plt.hist(x_est, bins=40, density = True, alpha=0.25)
+        index = bisect.bisect_right(y, rand)
+        x_est.append(x[index])
+    plt.hist(x_est, bins=40, density = True, alpha=0.5)
 
     plt.xlabel('Redshift')
     plt.title('Redshift Histogram')
