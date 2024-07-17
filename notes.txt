@@ -33,11 +33,6 @@
             -0.1 maybe 0.05
         - Y is the model parameters, X is the hit or miss matrix
             - find weights to make it true
-- COMPLETE: exclude bad data from w1/redshift
-- COMPLETE: Empirical sampling
-    - COMPLETE: skewed gaussian for w1
-    - COMPLETE: cdf for redshift
-    - COMPLETE: reproduce real histograms with sampler
 - outline of presentation
 
 
@@ -80,6 +75,11 @@
     - COMPLETE: LASSO, RIDGE, ELASTIC NET
     - COMPLETE: find cross-validation of combination
 - COMPELTE: Ask robert about the presentation
+- COMPLETE: exclude bad data from w1/redshift
+- COMPLETE: Empirical sampling
+    - COMPLETE: skewed gaussian for w1
+    - COMPLETE: cdf for redshift
+    - COMPLETE: reproduce real histograms with sampler
 
 ########################################
                 PCA
