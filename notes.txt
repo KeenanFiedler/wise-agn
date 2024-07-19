@@ -26,11 +26,11 @@
 ########################################
 - VECTOR goes to COLORTRACK
     - find linear combination of color color track contribute to 
-    - for each colortrack, detemine which bins of colorcolor space it occupies
+    - COMPLETE: for each colortrack, detemine which bins of colorcolor space it occupies
         - regression
-        - hit or miss matrix, which cells of color color space are hit by each colortrack
-        - divide color color into mag bins, determine which bins it falls into, make this a parameter
-            -0.1 maybe 0.05
+        - COMPLETE: hit or miss matrix, which cells of color color space are hit by each colortrack
+        - COMPLETE: divide color color into mag bins, determine which bins it falls into, make this a parameter
+            - 0.1 maybe 0.05
         - Y is the model parameters, X is the hit or miss matrix
             - find weights to make it true
 - outline of presentation

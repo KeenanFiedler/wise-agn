@@ -191,7 +191,7 @@ def generate_colortrack(n_sed, n_cos, wave, min_array = [5.0,1.0,0.0,0.0,15.0,10
     for j in range(n_sed):
         flux_for_color = fluxes[j,:,:]
         # Save to plot SED as function of i
-        np.save('colortrack_flux.npy', flux_for_color)
+        #np.save('colortrack_flux.npy', flux_for_color)
 
         # Get colors
         colors = get_colors(get_filterfluxes(filters, vega_norm, wave, flux_for_color))
@@ -206,7 +206,7 @@ def generate_colortrack(n_sed, n_cos, wave, min_array = [5.0,1.0,0.0,0.0,15.0,10
     return colortrack_array, random_draws
 
 
-def get_models_in_polygon(t1_vert, t2_vert, n_sed, n_cos, n_bins):
+def get_models_in_polygon(t1_vert, t2_vert, n_sed, n_cos, width):
     """
     0) Initialize filters and output array
     Loop over (random, dynamically generated) models:
@@ -235,7 +235,7 @@ def get_models_in_polygon(t1_vert, t2_vert, n_sed, n_cos, n_bins):
         y = track[:,0]
 
         # Get indexes of hit or miss matrix for this colortrack
-        indexes.append(find_hit_or_miss(n_bins, gpd.GeoDataFrame({'geometry':LineString(gpd.points_from_xy(x,y))}, index = [0], geometry = 'geometry')))
+        indexes.append(find_hit_or_miss(width, gpd.GeoDataFrame({'geometry':LineString(gpd.points_from_xy(x,y))}, index = [0], geometry = 'geometry')))
         
         #Check if the points of the color track are in the type1/2 boxes
         in_polygon = pd.DataFrame()
@@ -274,24 +274,22 @@ def get_models_in_polygon(t1_vert, t2_vert, n_sed, n_cos, n_bins):
     plt.savefig('polygons.png', dpi=300)
     plt.clf()
     """
-    plot_grid(indexes, colortracks, n_bins)
+    plot_grid(indexes, colortracks, width)
     #Cut out zero first element (Try to fix needing this step later)
     agn_tracks = agn_tracks[1:]
     agn_params = agn_params[1:]
 
     return agn_tracks, agn_params
 
-def find_hit_or_miss(n_bins,track):
+def find_hit_or_miss(width,track):
     w21_min, w21_max = 0, 5
     w32_min, w32_max = 1, 10
-    cell_height = (w21_max-w21_min)/n_bins
-    cell_width = (w32_max-w32_min)/n_bins
 
     grid_cells = []
-    for x0 in np.arange(w32_min, w32_max+cell_width, cell_width):
-        for y0 in np.arange(w21_min, w21_max+cell_height, cell_height):
-            x1 = x0-cell_width
-            y1 = y0+cell_height
+    for x0 in np.arange(w32_min, w32_max+width, width):
+        for y0 in np.arange(w21_min, w21_max+width, width):
+            x1 = x0-width
+            y1 = y0+width
             new_cell = shapely.geometry.box(x0, y0, x1, y1)
             grid_cells.append(new_cell)
     
@@ -300,17 +298,15 @@ def find_hit_or_miss(n_bins,track):
     joined = gpd.sjoin(track, g)['index_right'].unique().tolist()
     return joined
 
-def plot_grid(indexes, colortracks, n_bins):
+def plot_grid(indexes, colortracks, width):
     w21_min, w21_max = 0, 5
     w32_min, w32_max = 1, 10
-    cell_height = (w21_max-w21_min)/n_bins
-    cell_width = (w32_max-w32_min)/n_bins
 
     grid_cells = []
-    for x0 in np.arange(w32_min, w32_max+cell_width, cell_width):
-        for y0 in np.arange(w21_min, w21_max+cell_height, cell_height):
-            x1 = x0-cell_width
-            y1 = y0+cell_height
+    for x0 in np.arange(w32_min, w32_max+width, width):
+        for y0 in np.arange(w21_min, w21_max+width, width):
+            x1 = x0-width
+            y1 = y0+width
             new_cell = shapely.geometry.box(x0, y0, x1, y1)
             grid_cells.append(new_cell)
     
@@ -335,7 +331,8 @@ def main():
     t1_vert = [(2.5,1.0),(2.5,1.5),(3.5,1.5),(3.5,1.0),(2.5,1.0)]
     t2_vert = [(4.0,2.0),(4.0,3.0),(5.0,3.0),(5.0,2.0),(4.0,2.0)]
 
-    get_models_in_polygon(t1_vert,t2_vert,10,100,300)
+    # Type1 vert, Type2 vert, n_sed, n_cosine, bin_width
+    get_models_in_polygon(t1_vert,t2_vert,100,100,0.05)
 
     #mags = get_mags(10, filters, vega_norm, wave)
     #np.save('magnitudes.npy', mags)
