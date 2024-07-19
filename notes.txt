@@ -30,10 +30,8 @@
         - regression
         - COMPLETE: hit or miss matrix, which cells of color color space are hit by each colortrack
         - COMPLETE: divide color color into mag bins, determine which bins it falls into, make this a parameter
-            - 0.1 maybe 0.05
         - Y is the model parameters, X is the hit or miss matrix
             - find weights to make it true
-- outline of presentation
 
 
 ########################################
@@ -80,6 +78,7 @@
     - COMPLETE: skewed gaussian for w1
     - COMPLETE: cdf for redshift
     - COMPLETE: reproduce real histograms with sampler
+- COMPLETE: outline of presentation
 
 ########################################
                 PCA
@@ -125,6 +124,8 @@
     - Can find colors for any SED or set of SEDs 
     - Can generate SEDs using the machine learning model with uniformly random parameters 
     - Can create a color track for a given set of parameters, with i values from 0 to 90
+    - Can create the hit or miss matrix a color track
+    - Can check if a color track goes through the Type 1 and Type 2 polygons
 
 - 2dhist.py 
     - Plotting for the 2-D histgram and color tracks
