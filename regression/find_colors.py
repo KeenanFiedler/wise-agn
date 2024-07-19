@@ -219,7 +219,6 @@ def get_models_in_polygon(t1_vert, t2_vert, n_sed, n_cos, width):
     6) Go to 1), and repeat N times (maybe a 1e5 or 1e6 times)
     """
     #Setup
-    filters, vega_normalizations = get_filters()
     colortracks, params = generate_colortrack(n_sed,n_cos,wave)
     #Output Arrays
     agn_tracks = np.zeros((1,n_cos,2))
@@ -227,7 +226,7 @@ def get_models_in_polygon(t1_vert, t2_vert, n_sed, n_cos, width):
     j=0
     k=0
     #Find all viewings which have colors in type1-region ('blue box'), and simultaneously in type2-region ('red box')
-    indexes = []
+    hit_miss_grids = []
     for i in range(colortracks.shape[0]):
         track = colortracks[i]
         param = params[i]
@@ -235,7 +234,7 @@ def get_models_in_polygon(t1_vert, t2_vert, n_sed, n_cos, width):
         y = track[:,0]
 
         # Get indexes of hit or miss matrix for this colortrack
-        indexes.append(find_hit_or_miss(width, gpd.GeoDataFrame({'geometry':LineString(gpd.points_from_xy(x,y))}, index = [0], geometry = 'geometry')))
+        hit_miss_grids.append(find_hit_or_miss(width, gpd.GeoDataFrame({'geometry':LineString(gpd.points_from_xy(x,y))}, index = [0], geometry = 'geometry')))
         
         #Check if the points of the color track are in the type1/2 boxes
         in_polygon = pd.DataFrame()
@@ -274,7 +273,7 @@ def get_models_in_polygon(t1_vert, t2_vert, n_sed, n_cos, width):
     plt.savefig('polygons.png', dpi=300)
     plt.clf()
     """
-    plot_grid(indexes, colortracks, width)
+    plot_grid(hit_miss_grids, colortracks, width)
     #Cut out zero first element (Try to fix needing this step later)
     agn_tracks = agn_tracks[1:]
     agn_params = agn_params[1:]
@@ -296,9 +295,11 @@ def find_hit_or_miss(width,track):
     grid_cells = gpd.GeoDataFrame(geometry=grid_cells)
     g = grid_cells.copy()
     joined = gpd.sjoin(track, g)['index_right'].unique().tolist()
-    return joined
+    hit_miss_list = np.zeros(len(grid_cells))
+    hit_miss_list[joined] = 1
+    return hit_miss_list
 
-def plot_grid(indexes, colortracks, width):
+def plot_grid(hit_miss_grids, colortracks, width):
     w21_min, w21_max = 0, 5
     w32_min, w32_max = 1, 10
 
@@ -312,20 +313,40 @@ def plot_grid(indexes, colortracks, width):
     
     grid_cells = gpd.GeoDataFrame(geometry=grid_cells)
 
-    plasma = mpl.colormaps['plasma'].resampled(len(indexes))
-    for i in range(len(indexes)):
-        ind = indexes[i]
+    plasma = mpl.colormaps['plasma'].resampled(len(hit_miss_grids))
+    for i in range(len(hit_miss_grids)):
+        grid = hit_miss_grids[i]
+        ind = np.where(grid>0)[0]
         track = colortracks[i]
         g = grid_cells.copy().loc[ind]
         for index, row in g.iterrows():
             square = row['geometry']
-            plt.plot(*square.exterior.xy, color = plasma(i/len(indexes)), lw=0.1)
+            plt.plot(*square.exterior.xy, color = plasma(i/len(hit_miss_grids)), lw=0.3)
             plt.plot(track[:,1], track[:,0], 'g', lw=0.1)
     plt.xlabel('W2-W3')
     plt.ylabel('W1-W2')
+    plt.xlim(1.75,9.25)
+    plt.ylim(0.5,4.25)
     plt.title('Models and their intersection with the hit or miss grid')
     plt.savefig('boxes.png', dpi = 500)
     plt.clf()
+
+    for index, row in grid_cells.iterrows():
+        square = row['geometry']
+        plt.fill(*square.exterior.xy, 'g')
+    for i in range(len(hit_miss_grids)):
+        grid = hit_miss_grids[i]
+        ind = np.where(grid>0)[0]
+        g = grid_cells.copy().loc[ind]
+        for index, row in g.iterrows():
+            square = row['geometry']
+            plt.fill(*square.exterior.xy, 'r')
+    plt.xlabel('W2-W3')
+    plt.ylabel('W1-W2')
+    plt.title('Intersection with the hit or miss grid')
+    plt.savefig('full_grid.png', dpi = 500)
+    plt.clf()
+
 
 def main():
     t1_vert = [(2.5,1.0),(2.5,1.5),(3.5,1.5),(3.5,1.0),(2.5,1.0)]
