@@ -281,8 +281,8 @@ def get_models_in_polygon(t1_vert, t2_vert, n_sed, n_cos, width):
     return agn_tracks, agn_params
 
 def find_hit_or_miss(width,track):
-    w21_min, w21_max = 0, 5
-    w32_min, w32_max = 1, 10
+    w21_min, w21_max = 0.5,4.25
+    w32_min, w32_max = 1.75,9.25
 
     grid_cells = []
     for x0 in np.arange(w32_min, w32_max+width, width):
@@ -300,8 +300,8 @@ def find_hit_or_miss(width,track):
     return hit_miss_list
 
 def plot_grid(hit_miss_grids, colortracks, width):
-    w21_min, w21_max = 0, 5
-    w32_min, w32_max = 1, 10
+    w21_min, w21_max = 0.5,4.25
+    w32_min, w32_max = 1.75,9.25
 
     grid_cells = []
     for x0 in np.arange(w32_min, w32_max+width, width):
