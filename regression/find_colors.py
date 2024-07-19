@@ -5,13 +5,14 @@ import pandas as pd
 import geopandas as gpd
 
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 
 import filters
 
 from keras.models import load_model
 
 import shapely
-from shapely.geometry import Point
+from shapely.geometry import Point, LineString
 from shapely.geometry.polygon import Polygon
 
 
@@ -205,7 +206,7 @@ def generate_colortrack(n_sed, n_cos, wave, min_array = [5.0,1.0,0.0,0.0,15.0,10
     return colortrack_array, random_draws
 
 
-def get_models_in_polygon(t1_vert, t2_vert, n_sed, n_cos):
+def get_models_in_polygon(t1_vert, t2_vert, n_sed, n_cos, n_bins):
     """
     0) Initialize filters and output array
     Loop over (random, dynamically generated) models:
@@ -226,9 +227,16 @@ def get_models_in_polygon(t1_vert, t2_vert, n_sed, n_cos):
     j=0
     k=0
     #Find all viewings which have colors in type1-region ('blue box'), and simultaneously in type2-region ('red box')
+    indexes = []
     for i in range(colortracks.shape[0]):
         track = colortracks[i]
         param = params[i]
+        x = track[:,1]
+        y = track[:,0]
+
+        # Get indexes of hit or miss matrix for this colortrack
+        indexes.append(find_hit_or_miss(n_bins, gpd.GeoDataFrame({'geometry':LineString(gpd.points_from_xy(x,y))}, index = [0], geometry = 'geometry')))
+        
         #Check if the points of the color track are in the type1/2 boxes
         in_polygon = pd.DataFrame()
         in_polygon['t1'] = points_in_polygon(track[:,1], track[:,0], t1_vert)
@@ -240,6 +248,7 @@ def get_models_in_polygon(t1_vert, t2_vert, n_sed, n_cos):
         if (True in in_polygon['t1'].values) and (True in in_polygon['t2'].values):
             agn_tracks = np.append(agn_tracks, track[None, :, :], axis = 0)
             agn_params = np.append(agn_params, param[None,:], axis = 0)
+            """
             if j == 0:
                 plt.plot(track[:,1], track[:,0], 'g', label = 'AGN-like', lw=0.5)
                 j+=1
@@ -251,8 +260,9 @@ def get_models_in_polygon(t1_vert, t2_vert, n_sed, n_cos):
                 k+=1
             else:
                 plt.plot(track[:,1], track[:,0], 'r--', lw=0.5)
-    
+    """
     #Drawing polygons for plot
+    """
     t1_poly = Polygon(t1_vert)
     t2_poly = Polygon(t2_vert)
     plt.plot(*t1_poly.exterior.xy, 'b:', label = 'Type 1 AGN')
@@ -263,19 +273,69 @@ def get_models_in_polygon(t1_vert, t2_vert, n_sed, n_cos):
     plt.title('Models whose evolution over viewing angle lies in Type 1 and Type 2')
     plt.savefig('polygons.png', dpi=300)
     plt.clf()
-
+    """
+    plot_grid(indexes, colortracks, n_bins)
     #Cut out zero first element (Try to fix needing this step later)
     agn_tracks = agn_tracks[1:]
     agn_params = agn_params[1:]
 
     return agn_tracks, agn_params
 
+def find_hit_or_miss(n_bins,track):
+    w21_min, w21_max = 0, 5
+    w32_min, w32_max = 1, 10
+    cell_height = (w21_max-w21_min)/n_bins
+    cell_width = (w32_max-w32_min)/n_bins
+
+    grid_cells = []
+    for x0 in np.arange(w32_min, w32_max+cell_width, cell_width):
+        for y0 in np.arange(w21_min, w21_max+cell_height, cell_height):
+            x1 = x0-cell_width
+            y1 = y0+cell_height
+            new_cell = shapely.geometry.box(x0, y0, x1, y1)
+            grid_cells.append(new_cell)
+    
+    grid_cells = gpd.GeoDataFrame(geometry=grid_cells)
+    g = grid_cells.copy()
+    joined = gpd.sjoin(track, g)['index_right'].unique().tolist()
+    return joined
+
+def plot_grid(indexes, colortracks, n_bins):
+    w21_min, w21_max = 0, 5
+    w32_min, w32_max = 1, 10
+    cell_height = (w21_max-w21_min)/n_bins
+    cell_width = (w32_max-w32_min)/n_bins
+
+    grid_cells = []
+    for x0 in np.arange(w32_min, w32_max+cell_width, cell_width):
+        for y0 in np.arange(w21_min, w21_max+cell_height, cell_height):
+            x1 = x0-cell_width
+            y1 = y0+cell_height
+            new_cell = shapely.geometry.box(x0, y0, x1, y1)
+            grid_cells.append(new_cell)
+    
+    grid_cells = gpd.GeoDataFrame(geometry=grid_cells)
+
+    plasma = mpl.colormaps['plasma'].resampled(len(indexes))
+    for i in range(len(indexes)):
+        ind = indexes[i]
+        track = colortracks[i]
+        g = grid_cells.copy().loc[ind]
+        for index, row in g.iterrows():
+            square = row['geometry']
+            plt.plot(*square.exterior.xy, color = plasma(i/len(indexes)), lw=0.1)
+            plt.plot(track[:,1], track[:,0], 'g', lw=0.1)
+    plt.xlabel('W2-W3')
+    plt.ylabel('W1-W2')
+    plt.title('Models and their intersection with the hit or miss grid')
+    plt.savefig('boxes.png', dpi = 500)
+    plt.clf()
 
 def main():
     t1_vert = [(2.5,1.0),(2.5,1.5),(3.5,1.5),(3.5,1.0),(2.5,1.0)]
     t2_vert = [(4.0,2.0),(4.0,3.0),(5.0,3.0),(5.0,2.0),(4.0,2.0)]
 
-    get_models_in_polygon(t1_vert,t2_vert,100,100)
+    get_models_in_polygon(t1_vert,t2_vert,10,100,300)
 
     #mags = get_mags(10, filters, vega_norm, wave)
     #np.save('magnitudes.npy', mags)
