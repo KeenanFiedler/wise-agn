@@ -81,6 +81,14 @@ def main():
     desi = pd.read_csv('desi.csv')
     sdss = pd.read_csv('sdss.csv')
 
+    """
+    ind = np.where((desi.zerr<0.005) & (desi.zerr>0) & (desi.z>0.1) & (desi.z<3) & (desi.spectype =='QSO'))[0]
+    desi = desi.loc[ind]
+    desi.to_csv('desi.csv', index = None)
+    ind = np.where((sdss.zerr<0.005) & (sdss.zerr>0) & (sdss.z>0.1) & (sdss.z<3) & (sdss.sourcetype =='QSO'))[0]
+    sdss = sdss.loc[ind]
+    sdss.to_csv('sdss.csv', index = None)
+    """
     z = np.array(sdss.z)
     z = np.append(z, desi.z)
     w1 = np.array(sdss.t1_w1)

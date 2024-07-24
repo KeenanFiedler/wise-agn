@@ -3,6 +3,7 @@ import h5py as h5
 import scipy as sp
 import pandas as pd
 import geopandas as gpd
+import pylab as p
 
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -14,6 +15,8 @@ from keras.models import load_model
 import shapely
 from shapely.geometry import Point, LineString
 from shapely.geometry.polygon import Polygon
+
+from sklearn.linear_model import ElasticNet
 
 
 path = "C:\\Users\\keena\\Documents\\University of Arizona\\Jobs\\TIMESTEP NOIRLAB\\wise-agn\\"
@@ -175,13 +178,11 @@ def generate_colortrack(n_sed, n_cos, wave, min_array = [5.0,1.0,0.0,0.0,15.0,10
     cosi = np.linspace(0,1,n_cos) # linear spaced in cos(i)
     i = np.degrees(np.arccos(cosi))
     long_sed_params = np.repeat(random_draws, repeats=n_cos, axis=0)
-    print(long_sed_params.shape)
     long_sed_params[:, 2] = np.tile(i, long_sed_params.shape[0] // i.shape[0])
 
     #Predict
     model = load_model(path + 'autoencoder\\3layer_64\\model_decoder_gpu_64.keras')
     fluxes = 10**model.predict(long_sed_params)
-    print(fluxes.shape)
     #Split back into colortracks
     indices = np.arange(n_cos, fluxes.shape[0], n_cos)
     fluxes = np.array(np.array_split(fluxes, indices, 0))
@@ -226,7 +227,7 @@ def get_models_in_polygon(t1_vert, t2_vert, n_sed, n_cos, width):
     j=0
     k=0
     #Find all viewings which have colors in type1-region ('blue box'), and simultaneously in type2-region ('red box')
-    hit_miss_grids = []
+    hit_miss_grids = np.zeros((11476,100))
     for i in range(colortracks.shape[0]):
         track = colortracks[i]
         param = params[i]
@@ -234,7 +235,7 @@ def get_models_in_polygon(t1_vert, t2_vert, n_sed, n_cos, width):
         y = track[:,0]
 
         # Get indexes of hit or miss matrix for this colortrack
-        hit_miss_grids.append(find_hit_or_miss(width, gpd.GeoDataFrame({'geometry':LineString(gpd.points_from_xy(x,y))}, index = [0], geometry = 'geometry')))
+        hit_miss_grids[:,i] = find_hit_or_miss(width, gpd.GeoDataFrame({'geometry':LineString(gpd.points_from_xy(x,y))}, index = [0], geometry = 'geometry'))
         
         #Check if the points of the color track are in the type1/2 boxes
         in_polygon = pd.DataFrame()
@@ -273,12 +274,12 @@ def get_models_in_polygon(t1_vert, t2_vert, n_sed, n_cos, width):
     plt.savefig('polygons.png', dpi=300)
     plt.clf()
     """
-    plot_grid(hit_miss_grids, colortracks, width)
+    #plot_grid(hit_miss_grids, colortracks, width)
     #Cut out zero first element (Try to fix needing this step later)
     agn_tracks = agn_tracks[1:]
     agn_params = agn_params[1:]
 
-    return agn_tracks, agn_params
+    return agn_tracks, agn_params, hit_miss_grids
 
 def find_hit_or_miss(width,track):
     w21_min, w21_max = 0.5,4.25
@@ -297,7 +298,7 @@ def find_hit_or_miss(width,track):
     joined = gpd.sjoin(track, g)['index_right'].unique().tolist()
     hit_miss_list = np.zeros(len(grid_cells))
     hit_miss_list[joined] = 1
-    return hit_miss_list
+    return np.array(hit_miss_list)
 
 def plot_grid(hit_miss_grids, colortracks, width):
     w21_min, w21_max = 0.5,4.25
@@ -347,13 +348,87 @@ def plot_grid(hit_miss_grids, colortracks, width):
     plt.savefig('full_grid.png', dpi = 500)
     plt.clf()
 
+def find_y_grid(width):
+    w21_min, w21_max = 0.5,4.25
+    w32_min, w32_max = 1.75,9.25
+
+    range_ = [[1.75,9.25],[0.5,4.25]]
+    cx = 0
+    cy = 0
+
+    grid_cells = []
+    for x0 in np.arange(w32_min, w32_max+width, width):
+        cx+=1
+        for y0 in np.arange(w21_min, w21_max+width, width):
+            x1 = x0-width
+            y1 = y0+width
+            new_cell = shapely.geometry.box(x0, y0, x1, y1)
+            grid_cells.append(new_cell)
+            if x0 == 1.75:
+                cy+=1
+
+    desi = pd.read_csv(path + 'regression\\agn_explore\\desi.csv')
+    sdss = pd.read_csv(path + 'regression\\agn_explore\\sdss.csv')
+    w1 = np.array(sdss.w1)
+    w1 = np.append(w1, desi.w1)
+    w2 = np.array(sdss.w2)
+    w2 = np.append(w2, desi.w2)
+    w3 = np.array(sdss.w3)
+    w3 = np.append(w3, desi.w3)
+    xarr = w2-w3
+    yarr = w1-w2
+    H,_,_ = np.histogram2d(xarr,yarr,bins=[cx,cy],range=range_)
+    return H
+
+def regression(t1_vert,t2_vert, n_sed, n_cos, width):
+    tracks, params, X = get_models_in_polygon(t1_vert,t2_vert,n_sed,n_cos,width)
+    H = find_y_grid(width)
+    print(H.shape)
+    y = H.T.flatten()
+    ENet = ElasticNet(alpha=0.05,fit_intercept=False,positive=True)
+    ENet.fit(X,y)
+    data_pred = ENet.predict(X)
+    data_pred_2d = data_pred.reshape((76,151))
+    coeff = ENet.coef_
+
+
+    fig = p.figure(figsize=(8/1.5,12/1.5))
+    cmap = p.cm.jet
+    norm = mpl.colors.Normalize()
+#    norm = mpl.colors.LogNorm()
+    clabel = r'counts / mag$^2$'
+    intp = 'none'
+    def make_panel(ax,data,extent=None,title='',ylabel='',xlabel=''):
+        im = ax.imshow(data,origin='lower',extent=extent,cmap=cmap,interpolation=intp,norm=norm)
+        cb = p.colorbar(im)
+        cb.set_label(clabel)
+        p.title(title)
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+
+    extent = [1.75,9.25,0.5,4.25]
+    cellarea = width*width
+    ax1 = fig.add_subplot(311)
+    make_panel(ax1,X[:,0].reshape((76,151)),extent=extent,title='DATA',ylabel='W12')
+    """
+    ax1 = fig.add_subplot(311)
+    make_panel(ax1,H.T/cellarea,extent=extent,title='DATA',ylabel='W12')
+    ax2 = fig.add_subplot(312)
+    make_panel(ax2,data_pred_2d/cellarea,extent=extent,title='LASSO',ylabel='W12')
+    ax3 = fig.add_subplot(313)
+    make_panel(ax3,np.abs(H.T-data_pred_2d)/cellarea,extent=extent,title='DATA - LASSO',xlabel='W23',ylabel='W12')
+    """
+    p.savefig('data.png', dpi=300)
+    p.clf()
+
+
 
 def main():
     t1_vert = [(2.5,1.0),(2.5,1.5),(3.5,1.5),(3.5,1.0),(2.5,1.0)]
     t2_vert = [(4.0,2.0),(4.0,3.0),(5.0,3.0),(5.0,2.0),(4.0,2.0)]
 
     # Type1 vert, Type2 vert, n_sed, n_cosine, bin_width
-    get_models_in_polygon(t1_vert,t2_vert,100,100,0.05)
+    regression(t1_vert,t2_vert,100,100,0.05)
 
     #mags = get_mags(10, filters, vega_norm, wave)
     #np.save('magnitudes.npy', mags)
