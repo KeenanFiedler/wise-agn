@@ -379,25 +379,20 @@ def find_y_grid(width):
 def regression(t1_vert,t2_vert, n_sed, n_cos, width):
     # get the colortracks and hit or miss grids
     tracks, params, X = get_models_in_polygon(t1_vert,t2_vert,n_sed,n_cos,width)
-
     # get the hit or miss grid for the agn data
     H = find_y_grid(width)
     y = H.T.flatten()
 
     # set up cross validation
-    ratios = np.arange(0.01, 1, 0.01)
-    cv = RepeatedKFold(n_splits=10, n_repeats=3, random_state=1)
-    ENet = ElasticNetCV(cv=cv,fit_intercept=False,positive=True, l1_ratio=ratios, n_jobs = -1)
+    ENet = ElasticNet(alpha = 0.01, l1_ratio = 0.99, fit_intercept=False,positive=True, random_state=0)
     ENet.fit(X,y)
-    print('alpha: %f' % ENet.alpha_)
-    print('l1_ratio_: %f' % ENet.l1_ratio_)
 
     #predict new grid from X
     data_pred = ENet.predict(X)
     data_pred_2d = data_pred.reshape((76,151))
+    print(max(data_pred_2d.flatten()))
     coeff = ENet.coef_
     print(coeff)
-
     #plotting
     fig = p.figure(figsize=(8/1.5,12/1.5))
     cmap = p.cm.jet
@@ -415,11 +410,11 @@ def regression(t1_vert,t2_vert, n_sed, n_cos, width):
     extent = [1.75,9.25,0.5,4.25]
     cellarea = width*width
     ax1 = fig.add_subplot(311)
-    make_panel(ax1,H.T/cellarea,extent=extent,title='DATA',ylabel='W12')
+    make_panel(ax1,H.T/cellarea,extent=extent,title='Data',ylabel='W12')
     ax2 = fig.add_subplot(312)
-    make_panel(ax2,data_pred_2d/cellarea,extent=extent,title='LASSO',ylabel='W12')
+    make_panel(ax2,data_pred_2d/cellarea,extent=extent,title='Elastic Net',ylabel='W12')
     ax3 = fig.add_subplot(313)
-    make_panel(ax3,np.abs(H.T-data_pred_2d)/cellarea,extent=extent,title='DATA - LASSO',xlabel='W23',ylabel='W12')
+    make_panel(ax3,np.abs(H.T-data_pred_2d)/cellarea,extent=extent,title='Data - Elastic Net',xlabel='W23',ylabel='W12')
     p.savefig('data.png', dpi=300)
     p.clf()
 
@@ -427,13 +422,12 @@ def regression(t1_vert,t2_vert, n_sed, n_cos, width):
     np.savez('ct_p_coeff.npz', colortracks=tracks,params=params, coeff=coeff)
 
 
-
 def main():
     t1_vert = [(2.5,1.0),(2.5,1.5),(3.5,1.5),(3.5,1.0),(2.5,1.0)]
     t2_vert = [(4.0,2.0),(4.0,3.0),(5.0,3.0),(5.0,2.0),(4.0,2.0)]
 
     # Type1 vert, Type2 vert, n_sed, n_cosine, bin_width
-    regression(t1_vert,t2_vert,100,100,0.05)
+    regression(t1_vert,t2_vert,1000,100,0.05)
 
     #mags = get_mags(10, filters, vega_norm, wave)
     #np.save('magnitudes.npy', mags)
