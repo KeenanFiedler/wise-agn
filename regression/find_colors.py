@@ -228,6 +228,9 @@ def get_models_in_polygon(t1_vert, t2_vert, n_sed, n_cos, width):
     j=0
     k=0
     #Find all viewings which have colors in type1-region ('blue box'), and simultaneously in type2-region ('red box')
+    #width = 0.1
+    #hit_miss_grids = np.zeros((76*39,n_sed))
+    #width = 0.05
     hit_miss_grids = np.zeros((151*76,n_sed))
 
     w21_min, w21_max = 0.5,4.25
@@ -363,6 +366,8 @@ def find_y_grid(width):
             if y0 == 0.5:
                 cx += 1
 
+    print(cx)
+    print(cy)
     desi = pd.read_csv(path + 'regression\\agn_explore\\desi.csv')
     sdss = pd.read_csv(path + 'regression\\agn_explore\\sdss.csv')
     w1 = np.array(sdss.w1)
@@ -384,7 +389,7 @@ def regression(t1_vert,t2_vert, n_sed, n_cos, width):
     y = H.T.flatten()
 
     # set up cross validation
-    ENet = ElasticNet(alpha = 0.01, l1_ratio = 0.99, fit_intercept=False,positive=True, random_state=0)
+    ENet = ElasticNet(alpha = 0.0045, l1_ratio = 0.45, fit_intercept=False,positive=True, random_state=0)
     ENet.fit(X,y)
 
     #predict new grid from X
@@ -394,6 +399,7 @@ def regression(t1_vert,t2_vert, n_sed, n_cos, width):
     coeff = ENet.coef_
     print(coeff)
     #plotting
+    
     fig = p.figure(figsize=(8/1.5,12/1.5))
     cmap = p.cm.jet
     norm = mpl.colors.Normalize()
@@ -415,11 +421,15 @@ def regression(t1_vert,t2_vert, n_sed, n_cos, width):
     make_panel(ax2,data_pred_2d/cellarea,extent=extent,title='Elastic Net',ylabel='W12')
     ax3 = fig.add_subplot(313)
     make_panel(ax3,np.abs(H.T-data_pred_2d)/cellarea,extent=extent,title='Data - Elastic Net',xlabel='W23',ylabel='W12')
+    COLOR = 'white'
+    mpl.rcParams['text.color'] = COLOR
+    ax3.text(6,3, 'Mean Residual = ' + str(round(np.mean((H.T-data_pred_2d).flatten())/cellarea,3)), horizontalalignment='center', verticalalignment='center')
     p.savefig('data.png', dpi=300)
     p.clf()
 
     #Saveing colortracks, params for those, and weights for each
     np.savez('ct_p_coeff.npz', colortracks=tracks,params=params, coeff=coeff)
+    
 
 
 def main():
