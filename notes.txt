@@ -24,18 +24,9 @@
 ########################################
                 TO DO
 ########################################
-- Update desi+sdss crossmatch to include w3,w4
-- VECTOR goes to COLORTRACK
-    - find linear combination of color color track contribute to 
-    - COMPLETE: for each colortrack, detemine which bins of colorcolor space it occupies
-        - regression
-        - COMPLETE: hit or miss matrix, which cells of color color space are hit by each colortrack
-        - COMPLETE: divide color color into mag bins, determine which bins it falls into, make this a parameter
-        - Y is the model color histogram, X is the hit or miss matrix
-            - find weights to make it true
-            - sum(colortracks * weights)
-            - do 2d histogram of sum
-
+- IN PROG: get validation curve from elastic cv
+- IN PROG: histogram of initial params, and histogram with weights
+- do presentation rough draft
 
 ########################################
                 COMPLETE
@@ -82,6 +73,18 @@
     - COMPLETE: cdf for redshift
     - COMPLETE: reproduce real histograms with sampler
 - COMPLETE: outline of presentation
+- COMPLETE: update hit or miss to be max of 3 mag, 6 mag
+- COMPLETE: Update desi+sdss crossmatch to include w3,w4
+- COMPLETE: VECTOR goes to COLORTRACK
+    - find linear combination of color color track contribute to 
+    - COMPLETE: for each colortrack, detemine which bins of colorcolor space it occupies
+        - regression
+        - COMPLETE: hit or miss matrix, which cells of color color space are hit by each colortrack
+        - COMPLETE: divide color color into mag bins, determine which bins it falls into, make this a parameter
+        - COMPLETE:Y is the model color histogram, X is the hit or miss matrix
+            - find weights to make it true
+            - sum(colortracks * weights)
+            - do 2d histogram of sum
 
 ########################################
                 PCA

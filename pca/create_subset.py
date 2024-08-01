@@ -8,6 +8,24 @@ infile = h5.File("C:\\Users\\keena\\Documents\\University of Arizona\\Jobs\\TIME
 print("Keys: %s" % infile.keys())
 #get the correct data
 Y = infile['Y'][:]
+print(max(Y))
+print(min(Y))
+Y = infile['N0'][:]
+print(max(Y))
+print(min(Y))
+Y = infile['i'][:]
+print(max(Y))
+print(min(Y))
+Y = infile['q'][:]
+print(max(Y))
+print(min(Y))
+Y = infile['sig'][:]
+print(max(Y))
+print(min(Y))
+Y = infile['tv'][:]
+print(max(Y))
+print(min(Y))
+"""
 ind = np.where(Y==5)
 Y = Y[ind]
 N0 = infile['N0'][ind]
@@ -43,3 +61,4 @@ infile.close()
 outfile = h5.File("C:\\Users\\keena\\Documents\\University of Arizona\\Jobs\\TIMESTEP NOIRLAB\\pca\\models_subset.hdf5", 'w') #open file called test_config.hdf5 in write mode (i.e. 'w')
 outfile.create_dataset("dset", (len(Y),), dtype = file_dtype, data = out_array, chunks=True, compression = "gzip") #create a new dataset called dset of given size and shape and fill it with out_array
 outfile.flush()
+"""

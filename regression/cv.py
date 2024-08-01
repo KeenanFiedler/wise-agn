@@ -16,6 +16,9 @@ import shapely
 from shapely.geometry import Point, LineString
 from shapely.geometry.polygon import Polygon
 
+from sklearn.linear_model import ElasticNet, ElasticNetCV
+from sklearn.model_selection import RepeatedKFold
+
 
 path = "C:\\Users\\keena\\Documents\\University of Arizona\\Jobs\\TIMESTEP NOIRLAB\\wise-agn\\"
 wave = [0.01,0.015,0.022,0.033,0.049,0.073,0.1,0.123,0.151,0.185,0.227,0.279,0.343,0.421,0.517,
@@ -37,27 +40,6 @@ def points_in_polygon(x, y, vertices):
     polygon = Polygon(vertices)
 
     return shapely.contains(polygon, points)
-
-
-""" MAGNITUDE FUNCTIONS """
-def draw_normal(value, amount):
-    if value == 'z':
-        mu = 0.61274080
-        sig = 0.26551053
-    elif value == 'w1':
-        mu = 15.1269908
-        sig = 0.87389070
-    
-    return np.random.normal(mu, sig, amount)
-
-def get_mags(n, filters, vega_norm, wave):
-    w1 = draw_normal('w1', n)
-    fluxes = generate_seds(n)
-    colors = get_colors(get_filterfluxes(filters, vega_norm, wave, fluxes))
-    w2 = w1 - colors[:,0]
-    w3 = w2 - colors[:,1]
-    w4 = w3 - colors[:,2]
-
 
 """ FILTER FUNCTIONS """
 def flambda_bb(lam,T):
@@ -204,7 +186,6 @@ def generate_colortrack(n_sed, n_cos, wave, min_array = [5.0,1.0,0.0,0.0,15.0,10
     
     return colortrack_array, random_draws
 
-
 def get_models_in_polygon(t1_vert, t2_vert, n_sed, n_cos, width):
     """
     0) Initialize filters and output array
@@ -224,14 +205,10 @@ def get_models_in_polygon(t1_vert, t2_vert, n_sed, n_cos, width):
     agn_params = np.zeros((1,6))
     j=0
     k=0
-    #Find all viewings which have colors in type1-region ('blue box'), and simultaneously in type2-region ('red box')
-    #width = 0.1
-    #hit_miss_grids = np.zeros((76*39,n_sed))
-    #width = 0.05
-    hit_miss_grids = np.zeros((151*76,n_sed))
+    hit_miss_grids = np.zeros((86*51,n_sed))
 
-    w21_min, w21_max = 0.5,4.25
-    w32_min, w32_max = 1.75,9.25
+    w21_min, w21_max = 0.5,3
+    w32_min, w32_max = 1.25,5.5
     grid_cells = []
     for y0 in np.arange(w21_min, w21_max+width, width):
         for x0 in np.arange(w32_min, w32_max+width, width):
@@ -248,54 +225,12 @@ def get_models_in_polygon(t1_vert, t2_vert, n_sed, n_cos, width):
 
         # Get indexes of hit or miss matrix for this colortrack
         hit_miss_grids[:,i] = find_hit_or_miss(width, gpd.GeoDataFrame({'geometry':LineString(gpd.points_from_xy(x,y))}, index = [0], geometry = 'geometry'), grid_cells)
-        
-        """
-        #Check if the points of the color track are in the type1/2 boxes
-        in_polygon = pd.DataFrame()
-        in_polygon['t1'] = points_in_polygon(track[:,1], track[:,0], t1_vert)
-        in_polygon['t2'] = points_in_polygon(track[:,1], track[:,0], t2_vert)
-
-        #Plotting colortrack
-
-        #If the track is in type 1 and type 2 boxes, add it to the list
-        if (True in in_polygon['t1'].values) and (True in in_polygon['t2'].values):
-            agn_tracks = np.append(agn_tracks, track[None, :, :], axis = 0)
-            agn_params = np.append(agn_params, param[None,:], axis = 0)
-            if j == 0:
-                plt.plot(track[:,1], track[:,0], 'g', label = 'AGN-like', lw=0.5)
-                j+=1
-            else:
-                plt.plot(track[:,1], track[:,0], 'g', lw=0.5)
-        else:
-            if k == 0:
-                plt.plot(track[:,1], track[:,0], 'r--', label = 'Not AGN-like', lw=0.5)
-                k+=1
-            else:
-                plt.plot(track[:,1], track[:,0], 'r--', lw=0.5)
-    """
-    #Drawing polygons for plot
-    """
-    t1_poly = Polygon(t1_vert)
-    t2_poly = Polygon(t2_vert)
-    plt.plot(*t1_poly.exterior.xy, 'b:', label = 'Type 1 AGN')
-    plt.plot(*t2_poly.exterior.xy, 'k:', label = 'Type 2 AGN')
-    plt.legend()
-    plt.xlabel('W2-W3')
-    plt.ylabel('W1-W2')
-    plt.title('Models whose evolution over viewing angle lies in Type 1 and Type 2')
-    plt.savefig('polygons.png', dpi=300)
-    plt.clf()
-    """
-    #plot_grid(hit_miss_grids, colortracks, width, grid_cells)
-    #Cut out zero first element (Try to fix needing this step later)
-    #agn_tracks = agn_tracks[1:]
-    #agn_params = agn_params[1:]
 
     return colortracks, params, hit_miss_grids
 
 def find_hit_or_miss(width,track, grid_cells):
-    w21_min, w21_max = 0.5,4.25
-    w32_min, w32_max = 1.75,9.25
+    w21_min, w21_max = 0.5,3
+    w32_min, w32_max = 1.25,5.5
     
     grid_cells = gpd.GeoDataFrame(geometry=grid_cells)
     g = grid_cells.copy()
@@ -304,49 +239,9 @@ def find_hit_or_miss(width,track, grid_cells):
     hit_miss_list[joined] = 1
     return np.array(hit_miss_list)
 
-def plot_grid(hit_miss_grids, colortracks, width, grid_cells):
-    w21_min, w21_max = 0.5,4.25
-    w32_min, w32_max = 1.75,9.25
-    
-    grid_cells = gpd.GeoDataFrame(geometry=grid_cells)
-
-    plasma = mpl.colormaps['plasma'].resampled(len(hit_miss_grids))
-    for i in range(len(hit_miss_grids)):
-        grid = hit_miss_grids[i]
-        ind = np.where(grid>0)[0]
-        track = colortracks[i]
-        g = grid_cells.copy().loc[ind]
-        for index, row in g.iterrows():
-            square = row['geometry']
-            plt.plot(*square.exterior.xy, color = plasma(i/len(hit_miss_grids)), lw=0.3)
-            plt.plot(track[:,1], track[:,0], 'g', lw=0.1)
-    plt.xlabel('W2-W3')
-    plt.ylabel('W1-W2')
-    plt.xlim(1.75,9.25)
-    plt.ylim(0.5,4.25)
-    plt.title('Models and their intersection with the hit or miss grid')
-    plt.savefig('boxes.png', dpi = 500)
-    plt.clf()
-
-    for index, row in grid_cells.iterrows():
-        square = row['geometry']
-        plt.fill(*square.exterior.xy, 'g')
-    for i in range(len(hit_miss_grids)):
-        grid = hit_miss_grids[i]
-        ind = np.where(grid>0)[0]
-        g = grid_cells.copy().loc[ind]
-        for index, row in g.iterrows():
-            square = row['geometry']
-            plt.fill(*square.exterior.xy, 'r')
-    plt.xlabel('W2-W3')
-    plt.ylabel('W1-W2')
-    plt.title('Intersection with the hit or miss grid')
-    plt.savefig('full_grid.png', dpi = 500)
-    plt.clf()
-
 def find_y_grid(width):
-    w21_min, w21_max = 0.5,4.25
-    w32_min, w32_max = 1.75,9.25
+    w21_min, w21_max = 0.5,3
+    w32_min, w32_max = 1.25,5.5
 
     range_ = [[w32_min,w32_max],[w21_min,w21_max]]
 
@@ -380,26 +275,31 @@ def find_y_grid(width):
 
 def regression(t1_vert,t2_vert, n_sed, n_cos, width):
     # get the colortracks and hit or miss grids
-    tracks, params, X = get_models_in_polygon(t1_vert,t2_vert,n_sed,n_cos,width)
+    _, params, X = get_models_in_polygon(t1_vert,t2_vert,n_sed,n_cos,width)
+    np.save('x.npy',X)
+    print('Hit or miss found')
     # get the hit or miss grid for the agn data
     H = find_y_grid(width)
     y = H.T.flatten()
 
     # set up cross validation
-    ENet = ElasticNet(alpha = 0.0045, l1_ratio = 0.45, fit_intercept=False,positive=True, random_state=0)
+    ratios = np.arange(0.01, 1.01, 0.01)
+    in_alphas = np.linspace(0,0.01,1000)
+    print('Fitting...')
+    ENet = ElasticNetCV(cv=3, fit_intercept=False, positive=True, random_state=0, l1_ratio=ratios, alphas = in_alphas)
     ENet.fit(X,y)
-
+    print('alpha: %f' % ENet.alpha_)
+    print('l1_ratio_: %f' % ENet.l1_ratio_)
     #predict new grid from X
     data_pred = ENet.predict(X)
-    data_pred_2d = data_pred.reshape((76,151))
-    print(max(data_pred_2d.flatten()))
+    data_pred_2d = data_pred.reshape((51,86))
     coeff = ENet.coef_
-    print(coeff)
-    #plotting
-    
+
+    np.savez('p_c.npz', params = params, coeff = coeff)
+
     fig = p.figure(figsize=(8/1.5,12/1.5))
     cmap = p.cm.jet
-    norm = mpl.colors.Normalize()
+    norm = mpl.colors.LogNorm()
     clabel = r'counts / mag$^2$'
     intp = 'none'
     def make_panel(ax,data,extent=None,title='',ylabel='',xlabel=''):
@@ -410,7 +310,7 @@ def regression(t1_vert,t2_vert, n_sed, n_cos, width):
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
 
-    extent = [1.75,9.25,0.5,4.25]
+    extent = [1.25,5.5,0.5,3]
     cellarea = width*width
     ax1 = fig.add_subplot(311)
     make_panel(ax1,H.T/cellarea,extent=extent,title='Data',ylabel='W12')
@@ -418,15 +318,19 @@ def regression(t1_vert,t2_vert, n_sed, n_cos, width):
     make_panel(ax2,data_pred_2d/cellarea,extent=extent,title='Elastic Net',ylabel='W12')
     ax3 = fig.add_subplot(313)
     make_panel(ax3,np.abs(H.T-data_pred_2d)/cellarea,extent=extent,title='Data - Elastic Net',xlabel='W23',ylabel='W12')
-    COLOR = 'white'
+    COLOR = 'black'
     mpl.rcParams['text.color'] = COLOR
-    ax3.text(6,3, 'Mean Residual = ' + str(round(np.mean((H.T-data_pred_2d).flatten())/cellarea,3)), horizontalalignment='center', verticalalignment='center')
-    p.savefig('data.png', dpi=300)
+    ax3.text(3,2, 'Mean Residual = ' + str(round(np.mean((H.T-data_pred_2d).flatten())/cellarea,3)), horizontalalignment='center', verticalalignment='center')
+    p.savefig('data_cv.png', dpi=300)
     p.clf()
-
     #Saveing colortracks, params for those, and weights for each
-    np.savez('ct_p_coeff.npz', colortracks=tracks,params=params, coeff=coeff)
-    
+    path = ENet.path(X,y,l1_ratio=ENet.l1_ratio_, alphas = in_alphas,positive=True,random_state=0)
+    np.savez('ENET.npz', alphas = in_alphas, l1s = ratios, mse = ENet.mse_path_, dual_gaps = path[2])
+    plt.plot(in_alphas, path[2])
+    plt.xlabel('Alpha')
+    plt.ylabel('Dual Gap')
+    plt.title('Alpha vs Dual Gap')
+    plt.savefig('test.png')
 
 
 def main():
@@ -434,7 +338,7 @@ def main():
     t2_vert = [(4.0,2.0),(4.0,3.0),(5.0,3.0),(5.0,2.0),(4.0,2.0)]
 
     # Type1 vert, Type2 vert, n_sed, n_cosine, bin_width
-    regression(t1_vert,t2_vert,1000,100,0.05)
+    regression(t1_vert,t2_vert,10000,25,0.05)
 
     #mags = get_mags(10, filters, vega_norm, wave)
     #np.save('magnitudes.npy', mags)
