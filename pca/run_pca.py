@@ -14,6 +14,15 @@ dataset = np.log10(np.array(dset['flux_tor'][:]))
 wave_norm = dset['wave'][:]
 wave = np.log10(dset['wave'][:])
 
+plt.loglog(wave,flux[100], 'b--')
+plt.loglog(wave,flux[100000], 'r--')
+plt.loglog(wave,flux[1000000], 'g--')
+plt.loglog(wave,flux[5000], 'k--')
+plt.title('Example Spectra')
+plt.xlabel('Log Wavelength (Microns)')
+plt.ylabel('Log Flux')
+plt.savefig('example.png', dpi=1000, bbox_inches='tight')
+
 
 n_comp = [7,10,15,20]#range(7,21)
 

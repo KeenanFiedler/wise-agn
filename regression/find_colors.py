@@ -16,6 +16,8 @@ import shapely
 from shapely.geometry import Point, LineString
 from shapely.geometry.polygon import Polygon
 
+from sklearn.linear_model import ElasticNet
+
 
 path = "C:\\Users\\keena\\Documents\\University of Arizona\\Jobs\\TIMESTEP NOIRLAB\\wise-agn\\"
 wave = [0.01,0.015,0.022,0.033,0.049,0.073,0.1,0.123,0.151,0.185,0.227,0.279,0.343,0.421,0.517,
@@ -228,10 +230,10 @@ def get_models_in_polygon(t1_vert, t2_vert, n_sed, n_cos, width):
     #width = 0.1
     #hit_miss_grids = np.zeros((76*39,n_sed))
     #width = 0.05
-    hit_miss_grids = np.zeros((151*76,n_sed))
+    hit_miss_grids = np.zeros((86*51,n_sed))
 
-    w21_min, w21_max = 0.5,4.25
-    w32_min, w32_max = 1.75,9.25
+    w21_min, w21_max = 0.5,3
+    w32_min, w32_max = 1.25,5.5
     grid_cells = []
     for y0 in np.arange(w21_min, w21_max+width, width):
         for x0 in np.arange(w32_min, w32_max+width, width):
@@ -294,8 +296,8 @@ def get_models_in_polygon(t1_vert, t2_vert, n_sed, n_cos, width):
     return colortracks, params, hit_miss_grids
 
 def find_hit_or_miss(width,track, grid_cells):
-    w21_min, w21_max = 0.5,4.25
-    w32_min, w32_max = 1.75,9.25
+    w21_min, w21_max = 0.5,3
+    w32_min, w32_max = 1.25,5.5
     
     grid_cells = gpd.GeoDataFrame(geometry=grid_cells)
     g = grid_cells.copy()
@@ -322,8 +324,8 @@ def plot_grid(hit_miss_grids, colortracks, width, grid_cells):
             plt.plot(track[:,1], track[:,0], 'g', lw=0.1)
     plt.xlabel('W2-W3')
     plt.ylabel('W1-W2')
-    plt.xlim(1.75,9.25)
-    plt.ylim(0.5,4.25)
+    plt.xlim(1.25,5.5)
+    plt.ylim(0.5,3)
     plt.title('Models and their intersection with the hit or miss grid')
     plt.savefig('boxes.png', dpi = 500)
     plt.clf()
@@ -345,8 +347,8 @@ def plot_grid(hit_miss_grids, colortracks, width, grid_cells):
     plt.clf()
 
 def find_y_grid(width):
-    w21_min, w21_max = 0.5,4.25
-    w32_min, w32_max = 1.75,9.25
+    w21_min, w21_max = 0.5,3
+    w32_min, w32_max = 1.25,5.5
 
     range_ = [[w32_min,w32_max],[w21_min,w21_max]]
 
@@ -386,13 +388,12 @@ def regression(t1_vert,t2_vert, n_sed, n_cos, width):
     y = H.T.flatten()
 
     # set up cross validation
-    ENet = ElasticNet(alpha = 0.0045, l1_ratio = 0.45, fit_intercept=False,positive=True, random_state=0)
+    ENet = ElasticNet(alpha = 0.0045, l1_ratio = 0.97, fit_intercept=False, positive=True, random_state=0)
     ENet.fit(X,y)
 
     #predict new grid from X
     data_pred = ENet.predict(X)
-    data_pred_2d = data_pred.reshape((76,151))
-    print(max(data_pred_2d.flatten()))
+    data_pred_2d = data_pred.reshape((51,86))
     coeff = ENet.coef_
     print(coeff)
     #plotting
@@ -410,7 +411,7 @@ def regression(t1_vert,t2_vert, n_sed, n_cos, width):
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
 
-    extent = [1.75,9.25,0.5,4.25]
+    extent = [1.25,5.5,0.5,3]
     cellarea = width*width
     ax1 = fig.add_subplot(311)
     make_panel(ax1,H.T/cellarea,extent=extent,title='Data',ylabel='W12')
@@ -420,8 +421,8 @@ def regression(t1_vert,t2_vert, n_sed, n_cos, width):
     make_panel(ax3,np.abs(H.T-data_pred_2d)/cellarea,extent=extent,title='Data - Elastic Net',xlabel='W23',ylabel='W12')
     COLOR = 'white'
     mpl.rcParams['text.color'] = COLOR
-    ax3.text(6,3, 'Mean Residual = ' + str(round(np.mean((H.T-data_pred_2d).flatten())/cellarea,3)), horizontalalignment='center', verticalalignment='center')
-    p.savefig('data.png', dpi=300)
+    ax3.text(3,2, 'Mean Residual = ' + str(round(np.mean((H.T-data_pred_2d).flatten())/cellarea,3)), horizontalalignment='center', verticalalignment='center')
+    p.savefig('data.png', dpi=400)
     p.clf()
 
     #Saveing colortracks, params for those, and weights for each
@@ -434,7 +435,7 @@ def main():
     t2_vert = [(4.0,2.0),(4.0,3.0),(5.0,3.0),(5.0,2.0),(4.0,2.0)]
 
     # Type1 vert, Type2 vert, n_sed, n_cosine, bin_width
-    regression(t1_vert,t2_vert,1000,100,0.05)
+    regression(t1_vert,t2_vert,10000,50,0.05)
 
     #mags = get_mags(10, filters, vega_norm, wave)
     #np.save('magnitudes.npy', mags)

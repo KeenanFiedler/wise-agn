@@ -131,7 +131,7 @@ def main():
         im = ax.imshow(data,origin='lower',extent=extent,cmap=cmap,interpolation=intp,norm=norm)
         cb = plt.colorbar(im)
         cb.set_label(clabel)
-        plt.title(title)
+        ax.title.set_text(title)
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
 

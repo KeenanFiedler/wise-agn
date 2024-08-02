@@ -15,7 +15,7 @@ import shapely
 from shapely.geometry import Point, LineString
 from shapely.geometry.polygon import Polygon
 
-arr = np.load('ct_p_coeff_big.npz')
+arr = np.load('ct_p_coeff.npz')
 
 coeff = arr['coeff'][:]
 params = arr['params'][:]
