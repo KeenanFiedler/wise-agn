@@ -82,8 +82,8 @@ def draw_normal(data, amount):
     return np.random.normal(mu,sig,amount)
 
 def main():
-    desi = pd.read_csv('desi_new.csv')
-    sdss = pd.read_csv('sdss_new.csv')
+    desi = pd.read_csv('desi.csv')
+    sdss = pd.read_csv('sdss.csv')
 
     """
     ind = np.where((desi.zerr<0.005) & (desi.zerr>0) & (desi.z>0.1) & (desi.z<3) & (desi.spectype =='QSO'))[0]
@@ -113,12 +113,12 @@ def main():
             grid_cells.append(new_cell)
             if y0 == 0.5:
                 cx += 1
-    w1 = np.array(sdss.t1_w1mpro)
-    w1 = np.append(w1, desi.t1_w1mpro)
-    w2 = np.array(sdss.t1_w2mpro)
-    w2 = np.append(w2, desi.t1_w2mpro)
-    w3 = np.array(sdss.t1_w3mpro)
-    w3 = np.append(w3, desi.t1_w3mpro)
+    w1 = np.array(sdss.w1)
+    w1 = np.append(w1, desi.w1)
+    w2 = np.array(sdss.w2)
+    w2 = np.append(w2, desi.w2)
+    w3 = np.array(sdss.w3)
+    w3 = np.append(w3, desi.w3)
     xarr = w2-w3
     yarr = w1-w2
     H,_,_ = np.histogram2d(xarr,yarr,bins=[cx,cy],range=range_)
@@ -149,7 +149,7 @@ def main():
     H,_,_ = np.histogram2d(w23,w21,bins=[cx,cy],range=range_)
     make_panel(ax2,H.T/cellarea,extent=extent,title='CLUMPY',ylabel='W1-W2',xlabel='W2-W3')
     plt.tight_layout()
-    plt.savefig('test.png', dpi=1000)
+    plt.savefig('CLUMPYvsData.png', dpi=1000)
 
     """
     make_redshift_plot(desi, 'desi')
