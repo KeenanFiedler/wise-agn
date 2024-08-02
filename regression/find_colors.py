@@ -388,7 +388,7 @@ def regression(t1_vert,t2_vert, n_sed, n_cos, width):
     y = H.T.flatten()
 
     # set up cross validation
-    ENet = ElasticNet(alpha = 0.0045, l1_ratio = 0.97, fit_intercept=False, positive=True, random_state=0)
+    ENet = ElasticNet(alpha = 0.0045, l1_ratio = 0.97, fit_intercept=False, positive=True, random_state=0, max_iter=10000)
     ENet.fit(X,y)
 
     #predict new grid from X
@@ -400,7 +400,7 @@ def regression(t1_vert,t2_vert, n_sed, n_cos, width):
     
     fig = p.figure(figsize=(8/1.5,12/1.5))
     cmap = p.cm.jet
-    norm = mpl.colors.Normalize()
+    norm = mpl.colors.LogNorm()
     clabel = r'counts / mag$^2$'
     intp = 'none'
     def make_panel(ax,data,extent=None,title='',ylabel='',xlabel=''):
@@ -419,10 +419,10 @@ def regression(t1_vert,t2_vert, n_sed, n_cos, width):
     make_panel(ax2,data_pred_2d/cellarea,extent=extent,title='Elastic Net',ylabel='W12')
     ax3 = fig.add_subplot(313)
     make_panel(ax3,np.abs(H.T-data_pred_2d)/cellarea,extent=extent,title='Data - Elastic Net',xlabel='W23',ylabel='W12')
-    COLOR = 'white'
+    COLOR = 'black'
     mpl.rcParams['text.color'] = COLOR
     ax3.text(3,2, 'Mean Residual = ' + str(round(np.mean((H.T-data_pred_2d).flatten())/cellarea,3)), horizontalalignment='center', verticalalignment='center')
-    p.savefig('data.png', dpi=400)
+    p.savefig('data.png', dpi=400, bbox_inches='tight')
     p.clf()
 
     #Saveing colortracks, params for those, and weights for each
@@ -435,7 +435,7 @@ def main():
     t2_vert = [(4.0,2.0),(4.0,3.0),(5.0,3.0),(5.0,2.0),(4.0,2.0)]
 
     # Type1 vert, Type2 vert, n_sed, n_cosine, bin_width
-    regression(t1_vert,t2_vert,10000,50,0.05)
+    regression(t1_vert,t2_vert,10000,25,0.05)
 
     #mags = get_mags(10, filters, vega_norm, wave)
     #np.save('magnitudes.npy', mags)
