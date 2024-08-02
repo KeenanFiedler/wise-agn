@@ -6,6 +6,10 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import matplotlib.mlab as mlab
 
+import shapely
+from shapely.geometry import Point, LineString
+from shapely.geometry.polygon import Polygon
+
 from scipy.stats import norm
 from scipy.stats import skewnorm
 from scipy.stats import ecdf
@@ -78,8 +82,8 @@ def draw_normal(data, amount):
     return np.random.normal(mu,sig,amount)
 
 def main():
-    desi = pd.read_csv('desi.csv')
-    sdss = pd.read_csv('sdss.csv')
+    desi = pd.read_csv('desi_new.csv')
+    sdss = pd.read_csv('sdss_new.csv')
 
     """
     ind = np.where((desi.zerr<0.005) & (desi.zerr>0) & (desi.z>0.1) & (desi.z<3) & (desi.spectype =='QSO'))[0]
@@ -89,14 +93,68 @@ def main():
     sdss = sdss.loc[ind]
     sdss.to_csv('sdss.csv', index = None)
     """
-    z = np.array(sdss.z)
-    z = np.append(z, desi.z)
-    w1 = np.array(sdss.t1_w1)
-    w1 = np.append(w1, desi.t1_w1)
+    #z = np.array(sdss.z)
+    #z = np.append(z, desi.z)
+    width=0.05
+    w21_min, w21_max = 0.5,3
+    w32_min, w32_max = 1.25,5.5
 
+    range_ = [[w32_min,w32_max],[w21_min,w21_max]]
 
+    cx = 0
+    cy = 0
+    grid_cells = []
+    for y0 in np.arange(w21_min, w21_max+width, width):
+        cy += 1
+        for x0 in np.arange(w32_min, w32_max+width, width):
+            x1 = x0+width
+            y1 = y0+width
+            new_cell = shapely.geometry.box(x0, y0, x1, y1)
+            grid_cells.append(new_cell)
+            if y0 == 0.5:
+                cx += 1
+    w1 = np.array(sdss.t1_w1mpro)
+    w1 = np.append(w1, desi.t1_w1mpro)
+    w2 = np.array(sdss.t1_w2mpro)
+    w2 = np.append(w2, desi.t1_w2mpro)
+    w3 = np.array(sdss.t1_w3mpro)
+    w3 = np.append(w3, desi.t1_w3mpro)
+    xarr = w2-w3
+    yarr = w1-w2
+    H,_,_ = np.histogram2d(xarr,yarr,bins=[cx,cy],range=range_)
+
+    cmap = plt.cm.jet
+    norm = mpl.colors.LogNorm()
+    clabel = r'counts / mag$^2$'
+    intp = 'none'
+    def make_panel(ax,data,extent=None,title='',ylabel='',xlabel=''):
+        im = ax.imshow(data,origin='lower',extent=extent,cmap=cmap,interpolation=intp,norm=norm)
+        cb = plt.colorbar(im)
+        cb.set_label(clabel)
+        plt.title(title)
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+
+    extent = [1.25,5.5,0.5,3]
+    cellarea = width*width
+    fig, ax = plt.subplots(2,1)
+    fig.set_figwidth(4.5)
+    fig.suptitle('Data vs CLUMPY models')
+    ax1 = ax[0]
+    ax2 = ax[1]
+    make_panel(ax1,H.T/cellarea,extent=extent,title='Data',ylabel='W1-W2')
+    colors = np.load('clumpy_colors.npy')
+    w21 = colors[:,0]
+    w23 = colors[:,1]
+    H,_,_ = np.histogram2d(w23,w21,bins=[cx,cy],range=range_)
+    make_panel(ax2,H.T/cellarea,extent=extent,title='CLUMPY',ylabel='W1-W2',xlabel='W2-W3')
+    plt.tight_layout()
+    plt.savefig('test.png', dpi=1000)
+
+    """
     make_redshift_plot(desi, 'desi')
     make_histogram(w1, z)
     draw_normal(z,1)
+    """
 
 main()

@@ -9,7 +9,7 @@ from shapely.geometry.polygon import Polygon
 path = "C:\\Users\\keena\\Documents\\University of Arizona\\Jobs\\TIMESTEP NOIRLAB\\wise-agn\\"
 
 
-
+"""
 t1_vert = [(2.5,1.0),(2.5,1.5),(3.5,1.5),(3.5,1.0),(2.5,1.0)]
 t2_vert = [(4.0,2.0),(4.0,3.0),(5.0,3.0),(5.0,2.0),(4.0,2.0)]
 
@@ -19,19 +19,21 @@ w23 = colors[:,1]
 ind = np.where((w21 > 2.2099) & (w23 > 5.89336))[0]
 w21 = w21[ind]
 print('Number of AGN in CLUMPY outside of range of model generator: ' + str(len(w21)))
-
+"""
 def plot_colors(filename):
     colors = np.load(filename)
     w21 = colors[:,0]
     w23 = colors[:,1]
-    plt.hist2d(w23,w21, bins = (50,50), norm=mpl.colors.LogNorm())
-    t1_poly = Polygon(t1_vert)
-    t2_poly = Polygon(t2_vert)
-    plt.plot(*t1_poly.exterior.xy, 'r:', label = 'Type 1 AGN')
-    plt.plot(*t2_poly.exterior.xy, 'k:', label = 'Type 2 AGN')
+    plt.hist2d(w23,w21, bins = (50,50), norm=mpl.colors.LogNorm(), cmap=plt.cm.jet)
+    #t1_poly = Polygon(t1_vert)
+    #t2_poly = Polygon(t2_vert)
+    #plt.plot(*t1_poly.exterior.xy, 'r:', label = 'Type 1 AGN')
+    #plt.plot(*t2_poly.exterior.xy, 'k:', label = 'Type 2 AGN')
     plt.colorbar()
-    plt.ylabel('W2-W1')
+    plt.ylabel('W1-W2')
     plt.xlabel('W2-W3')
+    plt.xlim(1.25,5.5)
+    plt.ylim(0.5,3)
     plt.legend()
     plt.title('Histogram of Colors')
     plt.savefig(filename[:-4] + '_hist2d.png', dpi=300, bbox_inches = 'tight')
@@ -39,7 +41,7 @@ def plot_colors(filename):
 
 # 2-D Histogram
 plot_colors('clumpy_colors.npy')
-plot_colors('model_colors.npy')
+#plot_colors('model_colors.npy')
 
 """
 # Color Tracks
