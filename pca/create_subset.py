@@ -7,25 +7,19 @@ np.set_printoptions(threshold=sys.maxsize)
 infile = h5.File("C:\\Users\\keena\\Documents\\University of Arizona\\Jobs\\TIMESTEP NOIRLAB\\wise-agn\\pca\\clumpy_models_201410_tvavg.hdf5", 'r')
 print("Keys: %s" % infile.keys())
 #get the correct data
-Y = infile['Y'][:]
-print(max(Y))
-print(min(Y))
-Y = infile['N0'][:]
-print(max(Y))
-print(min(Y))
-Y = infile['i'][:]
-print(max(Y))
-print(min(Y))
-Y = infile['q'][:]
-print(max(Y))
-print(min(Y))
-Y = infile['sig'][:]
-print(max(Y))
-print(min(Y))
-Y = infile['tv'][:]
-print(max(Y))
-print(min(Y))
 """
+Y = infile['Y'][:]
+
+N0 = infile['N0'][:]
+
+i = infile['i'][:]
+
+q = infile['q'][:]
+
+sig = infile['sig'][:]
+
+tv = infile['tv'][:]
+
 ind = np.where(Y==5)
 Y = Y[ind]
 N0 = infile['N0'][ind]
@@ -62,3 +56,20 @@ outfile = h5.File("C:\\Users\\keena\\Documents\\University of Arizona\\Jobs\\TIM
 outfile.create_dataset("dset", (len(Y),), dtype = file_dtype, data = out_array, chunks=True, compression = "gzip") #create a new dataset called dset of given size and shape and fill it with out_array
 outfile.flush()
 """
+
+flux_tor = infile['flux_tor'][:]
+wave = infile['wave'][:]
+file_dtype = [('flux_tor', flux_tor.dtype, len(wave))]
+out_array = np.zeros((len(flux_tor),),dtype=file_dtype)
+out_array['flux_tor'] = flux_tor
+
+wave_dtype = [('wave', wave.dtype)]
+out_wave  = np.zeros(len(wave), dtype = wave_dtype)
+
+infile.close()
+
+
+outfile = h5.File("C:\\Users\\keena\\Documents\\University of Arizona\\Jobs\\TIMESTEP NOIRLAB\\wise-agn\\pca\\flux_only.hdf5", 'w') #open file called test_config.hdf5 in write mode (i.e. 'w')
+outfile.create_dataset("flux_tor", (len(flux_tor),), dtype = file_dtype, data = out_array, chunks=True, compression = "gzip") #create a new dataset called dset of given size and shape and fill it with out_array
+outfile.create_dataset("wave", (len(wave),), dtype = wave_dtype, data = out_wave, chunks=True, compression = "gzip") #create a new dataset called dset of given size and shape and fill it with out_array
+outfile.flush()

@@ -13,7 +13,7 @@ flux = np.array(dset['flux_tor'][:])
 dataset = np.log10(np.array(dset['flux_tor'][:]))
 wave = np.array(dset['wave'][:])
 
-pca = PCA(n_components=7)
+pca = PCA(n_components=10)
 mu = np.mean(dataset, axis=0)
 pca.fit(dataset)
 weights = pca.transform(dataset)

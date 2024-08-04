@@ -228,9 +228,9 @@ def get_models_in_polygon(t1_vert, t2_vert, n_sed, n_cos, width):
     k=0
     #Find all viewings which have colors in type1-region ('blue box'), and simultaneously in type2-region ('red box')
     #width = 0.1
-    hit_miss_grids = np.zeros((44*26,n_sed))
+    #hit_miss_grids = np.zeros((44*26,n_sed))
     #width = 0.05
-    #hit_miss_grids = np.zeros((86*51,n_sed))
+    hit_miss_grids = np.zeros((86*51,n_sed))
 
     w21_min, w21_max = 0.5,3
     w32_min, w32_max = 1.25,5.5
@@ -288,7 +288,7 @@ def get_models_in_polygon(t1_vert, t2_vert, n_sed, n_cos, width):
     plt.savefig('polygons.png', dpi=300)
     plt.clf()
     """
-    #plot_grid(hit_miss_grids, colortracks, width, grid_cells)
+    plot_grid(hit_miss_grids, colortracks, width, grid_cells)
     #Cut out zero first element (Try to fix needing this step later)
     #agn_tracks = agn_tracks[1:]
     #agn_params = agn_params[1:]
@@ -307,20 +307,21 @@ def find_hit_or_miss(width,track, grid_cells):
     return np.array(hit_miss_list)
 
 def plot_grid(hit_miss_grids, colortracks, width, grid_cells):
-    w21_min, w21_max = 0.5,4.25
-    w32_min, w32_max = 1.75,9.25
+    w21_min, w21_max = 0.5,3
+    w32_min, w32_max = 1.25,5.5
     
     grid_cells = gpd.GeoDataFrame(geometry=grid_cells)
-
+    print(colortracks.shape)
+    print(hit_miss_grids.shape)
     plasma = mpl.colormaps['plasma'].resampled(len(hit_miss_grids))
-    for i in range(len(hit_miss_grids)):
-        grid = hit_miss_grids[i]
+    for i in range(hit_miss_grids.shape[1]):
+        grid = hit_miss_grids[:,i]
         ind = np.where(grid>0)[0]
         track = colortracks[i]
         g = grid_cells.copy().loc[ind]
         for index, row in g.iterrows():
             square = row['geometry']
-            plt.plot(*square.exterior.xy, color = plasma(i/len(hit_miss_grids)), lw=0.3)
+            plt.plot(*square.exterior.xy, color = plasma(i/hit_miss_grids.shape[1]), lw=0.3)
             plt.plot(track[:,1], track[:,0], 'g', lw=0.1)
     plt.xlabel('W2-W3')
     plt.ylabel('W1-W2')
@@ -333,8 +334,8 @@ def plot_grid(hit_miss_grids, colortracks, width, grid_cells):
     for index, row in grid_cells.iterrows():
         square = row['geometry']
         plt.fill(*square.exterior.xy, 'g')
-    for i in range(len(hit_miss_grids)):
-        grid = hit_miss_grids[i]
+    for i in range(hit_miss_grids.shape[1]):
+        grid = hit_miss_grids[:,i]
         ind = np.where(grid>0)[0]
         g = grid_cells.copy().loc[ind]
         for index, row in g.iterrows():
@@ -395,8 +396,8 @@ def regression(t1_vert,t2_vert, n_sed, n_cos, width):
     data_pred = ENet.predict(X)
 
     #wdth =0.1
-    data_pred_2d = data_pred.reshape((26,44))
-    #data_pred_2d = data_pred.reshape((51,86))
+    #data_pred_2d = data_pred.reshape((26,44))
+    data_pred_2d = data_pred.reshape((51,86))
     coeff = ENet.coef_
     print(coeff)
     #plotting
@@ -438,7 +439,7 @@ def main():
     t2_vert = [(4.0,2.0),(4.0,3.0),(5.0,3.0),(5.0,2.0),(4.0,2.0)]
 
     # Type1 vert, Type2 vert, n_sed, n_cosine, bin_width
-    regression(t1_vert,t2_vert,10**4,25,0.1)
+    regression(t1_vert,t2_vert,100,25,0.05)
 
     #mags = get_mags(10, filters, vega_norm, wave)
     #np.save('magnitudes.npy', mags)
