@@ -228,9 +228,9 @@ def get_models_in_polygon(t1_vert, t2_vert, n_sed, n_cos, width):
     k=0
     #Find all viewings which have colors in type1-region ('blue box'), and simultaneously in type2-region ('red box')
     #width = 0.1
-    #hit_miss_grids = np.zeros((76*39,n_sed))
+    hit_miss_grids = np.zeros((44*26,n_sed))
     #width = 0.05
-    hit_miss_grids = np.zeros((86*51,n_sed))
+    #hit_miss_grids = np.zeros((86*51,n_sed))
 
     w21_min, w21_max = 0.5,3
     w32_min, w32_max = 1.25,5.5
@@ -382,10 +382,10 @@ def find_y_grid(width):
 
 def regression(t1_vert,t2_vert, n_sed, n_cos, width):
     # get the colortracks and hit or miss grids
-    tracks, params, X = get_models_in_polygon(t1_vert,t2_vert,n_sed,n_cos,width)
-    # get the hit or miss grid for the agn data
     H = find_y_grid(width)
     y = H.T.flatten()
+    tracks, params, X = get_models_in_polygon(t1_vert,t2_vert,n_sed,n_cos,width)
+    # get the hit or miss grid for the agn data
 
     # set up cross validation
     ENet = ElasticNet(alpha = 0.0045, l1_ratio = 0.97, fit_intercept=False, positive=True, random_state=0, max_iter=10000)
@@ -393,7 +393,10 @@ def regression(t1_vert,t2_vert, n_sed, n_cos, width):
 
     #predict new grid from X
     data_pred = ENet.predict(X)
-    data_pred_2d = data_pred.reshape((51,86))
+
+    #wdth =0.1
+    data_pred_2d = data_pred.reshape((26,44))
+    #data_pred_2d = data_pred.reshape((51,86))
     coeff = ENet.coef_
     print(coeff)
     #plotting
@@ -435,7 +438,7 @@ def main():
     t2_vert = [(4.0,2.0),(4.0,3.0),(5.0,3.0),(5.0,2.0),(4.0,2.0)]
 
     # Type1 vert, Type2 vert, n_sed, n_cosine, bin_width
-    regression(t1_vert,t2_vert,10000,25,0.05)
+    regression(t1_vert,t2_vert,10**4,25,0.1)
 
     #mags = get_mags(10, filters, vega_norm, wave)
     #np.save('magnitudes.npy', mags)

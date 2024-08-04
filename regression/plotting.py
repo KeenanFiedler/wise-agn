@@ -3,6 +3,7 @@ import h5py as h5
 import scipy as sp
 import pandas as pd
 import geopandas as gpd
+import pylab as p
 
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -15,9 +16,113 @@ import shapely
 from shapely.geometry import Point, LineString
 from shapely.geometry.polygon import Polygon
 
-arr = np.load('ct_p_coeff.npz')
+path = "C:\\Users\\keena\\Documents\\University of Arizona\\Jobs\\TIMESTEP NOIRLAB\\wise-agn\\"
+
+def find_y_grid(width):
+    w21_min, w21_max = 0.5,3
+    w32_min, w32_max = 1.75,5.5
+
+    range_ = [[w32_min,w32_max],[w21_min,w21_max]]
+
+    cx = 0
+    cy = 0
+    grid_cells = []
+    for y0 in np.arange(w21_min, w21_max+width, width):
+        cy += 1
+        for x0 in np.arange(w32_min, w32_max+width, width):
+            x1 = x0+width
+            y1 = y0+width
+            new_cell = shapely.geometry.box(x0, y0, x1, y1)
+            grid_cells.append(new_cell)
+            if y0 == 0.5:
+                cx += 1
+
+    print(cx)
+    print(cy)
+    desi = pd.read_csv(path + 'regression\\agn_explore\\desi.csv')
+    sdss = pd.read_csv(path + 'regression\\agn_explore\\sdss.csv')
+    w1 = np.array(sdss.w1)
+    w1 = np.append(w1, desi.w1)
+    w2 = np.array(sdss.w2)
+    w2 = np.append(w2, desi.w2)
+    w3 = np.array(sdss.w3)
+    w3 = np.append(w3, desi.w3)
+    xarr = w2-w3
+    yarr = w1-w2
+    H,_,_ = np.histogram2d(xarr,yarr,bins=[cx,cy],range=range_)
+    return H
+
+"""
+test = np.load('ENET_small.npz')
+print(test.files)
+a = test['alphas'][:]
+l = test['l1s'][:]
+grid = test['mse'][:,:,2]
+print(np.unravel_index(grid.argmin(), grid.shape))
+plt.pcolormesh(a, l, grid, cmap='jet')
+plt.colorbar()
+plt.scatter(a[8], l[87], color = 'r', label = 'Minimum MSE')
+plt.xlabel(r'α Regularization')
+plt.ylabel(r'L1 Ratio')
+plt.title('Validation Mean Square Error for Parameter Range')
+plt.savefig('val_curve.png', dpi=500, bbox_inches = 'tight')
+plt.clf()
+
+plt.plot(test['alphas'][:-2], test['dual_gaps'][:-2])
+plt.plot(test['alphas'][:], np.mean(test['mse'][:,:,2],axis = 1))
+plt.show()
+plt.clf()
+plt.plot(test['l1s'][:-2], test['dual_gaps'][:-2])
+plt.plot(test['l1s'][:], np.mean(test['mse'][:,:,2],axis = 0))
+plt.show()
+plt.clf()
+"""
+H = find_y_grid(0.05)
+
+arr = np.load('ct_p_coeff_big.npz')
 
 coeff = arr['coeff'][:]
+X = arr['hit_miss'][:]
+data_pred_2d = np.sum(X*coeff, axis=1)
+data_pred_2d = data_pred_2d.reshape((76,151))
+data_pred_2d = data_pred_2d[:,:76]
+data_pred_2d = data_pred_2d[:51,:]
+#plotting
+    
+fig = p.figure(figsize=(8/1.5,12/1.5))
+cmap = p.cm.jet
+norm = mpl.colors.LogNorm()
+clabel = r'counts / mag$^2$'
+intp = 'none'
+def make_panel(ax,data,extent=None,title='',ylabel='',xlabel=''):
+    im = ax.imshow(data,origin='lower',extent=extent,cmap=cmap,interpolation=intp,norm=norm)
+    cb = p.colorbar(im)
+    cb.set_label(clabel)
+    p.title(title)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+
+extent = [1.75,5.5,0.5,3]
+cellarea = 0.05*0.05
+
+ax1 = fig.add_subplot(311)
+make_panel(ax1,H.T/cellarea,extent=extent,title='Data',ylabel='W12')
+
+ax2 = fig.add_subplot(312)
+make_panel(ax2,data_pred_2d/cellarea,extent=extent,title='Elastic Net',ylabel='W12')
+
+ax3 = fig.add_subplot(313)
+make_panel(ax3,np.abs(H.T-data_pred_2d)/cellarea,extent=extent,title='Data - Elastic Net',xlabel='W23',ylabel='W12')
+
+COLOR = 'red'
+mpl.rcParams['text.color'] = COLOR
+plt.tight_layout()
+import matplotlib.patheffects as pe
+ax3.text(3.1,2.8, 'Mean Residual = ' + str(int(np.mean((H.T-data_pred_2d).flatten())/cellarea)), weight = 'bold',horizontalalignment='center', verticalalignment='center',path_effects=[pe.withStroke(linewidth=2, foreground="black")])
+p.savefig('data_big.png', dpi=500, bbox_inches='tight')
+p.clf()
+
+"""
 params = arr['params'][:]
 arr = None
 
@@ -57,4 +162,5 @@ plt.subplots_adjust(top=0.9)
 plt.subplots_adjust(bottom=0.15)
 fig.suptitle('Parameters vs weighted versions')
 plt.savefig('test_hist.png', bbox_inches = 'tight',dpi=500)
+"""
 
