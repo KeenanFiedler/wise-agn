@@ -8,6 +8,9 @@ import pylab as p
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 
+from numpy import inf
+
+
 import filters
 
 from keras.models import load_model
@@ -20,7 +23,7 @@ path = "C:\\Users\\keena\\Documents\\University of Arizona\\Jobs\\TIMESTEP NOIRL
 
 def find_y_grid(width):
     w21_min, w21_max = 0.5,3
-    w32_min, w32_max = 1.75,5.5
+    w32_min, w32_max = 1.25,5.5
 
     range_ = [[w32_min,w32_max],[w21_min,w21_max]]
 
@@ -77,24 +80,26 @@ plt.plot(test['l1s'][:], np.mean(test['mse'][:,:,2],axis = 0))
 plt.show()
 plt.clf()
 """
+
 H = find_y_grid(0.05)
 
-arr = np.load('ct_p_coeff_big.npz')
+arr = np.load('data\\ct_p_coeff_big.npz')
 
 coeff = arr['coeff'][:]
-X = arr['hit_miss'][:]
-data_pred_2d = np.sum(X*coeff, axis=1)
-data_pred_2d = data_pred_2d.reshape((76,151))
-data_pred_2d = data_pred_2d[:,:76]
-data_pred_2d = data_pred_2d[:51,:]
+print(np.count_nonzero(coeff))
+#X = arr['hit_miss'][:]
+#data_pred_2d = np.sum(X*coeff, axis=1)
+#data_pred_2d = data_pred_2d.reshape((51,86))
+#np.save('data_pred.npy', data_pred_2d)
+data_pred_2d = np.load('data\\data_pred.npy')
 #plotting
-    
+
 fig = p.figure(figsize=(8/1.5,12/1.5))
 cmap = p.cm.jet
 norm = mpl.colors.LogNorm()
 clabel = r'counts / mag$^2$'
 intp = 'none'
-def make_panel(ax,data,extent=None,title='',ylabel='',xlabel=''):
+def make_panel(ax,data,extent=None,title='',ylabel='',xlabel='', morm = mpl.colors.LogNorm()):
     im = ax.imshow(data,origin='lower',extent=extent,cmap=cmap,interpolation=intp,norm=norm)
     cb = p.colorbar(im)
     cb.set_label(clabel)
@@ -106,23 +111,39 @@ extent = [1.75,5.5,0.5,3]
 cellarea = 0.05*0.05
 
 ax1 = fig.add_subplot(311)
-make_panel(ax1,H.T/cellarea,extent=extent,title='Data',ylabel='W12')
+make_panel(ax1,H.T/cellarea,extent=extent,title='Data',ylabel='W1-W2')
 
 ax2 = fig.add_subplot(312)
-make_panel(ax2,data_pred_2d/cellarea,extent=extent,title='Elastic Net',ylabel='W12')
+make_panel(ax2,data_pred_2d/cellarea,extent=extent,title='Elastic Net',ylabel='W1-W2')
 
 ax3 = fig.add_subplot(313)
-make_panel(ax3,np.abs(H.T-data_pred_2d)/cellarea,extent=extent,title='Data - Elastic Net',xlabel='W23',ylabel='W12')
+norm = mpl.colors.Normalize()
 
+im = ax3.imshow((((data_pred_2d-H.T)/H.T)*100),origin='lower',extent=extent,cmap=p.cm.bwr,interpolation=intp,norm=norm)
+cb = p.colorbar(im)
+im.set_clim(vmin=-200, vmax=200)
+cb.set_label(r'percent error')
+p.title('Percent Error')
+ax3.set_xlabel('W2-W3')
+ax3.set_ylabel('W1-W2')
+
+
+error = (np.abs(data_pred_2d-H.T)/H.T).flatten()
+error[error == -inf] = -1
+error[error == inf] = 1
+error[~np.isfinite(error)] = 0
 COLOR = 'red'
 mpl.rcParams['text.color'] = COLOR
 plt.tight_layout()
 import matplotlib.patheffects as pe
-ax3.text(3.1,2.8, 'Mean Residual = ' + str(int(np.mean((H.T-data_pred_2d).flatten())/cellarea)), weight = 'bold',horizontalalignment='center', verticalalignment='center',path_effects=[pe.withStroke(linewidth=2, foreground="black")])
+ax3.text(3.625,2.8, 'Mean Abs Error = ' + str(round(np.mean(100*error),4)),fontsize=14, weight = 'bold', horizontalalignment='center', verticalalignment='center',path_effects=[pe.withStroke(linewidth=2, foreground="black")])
 p.savefig('data_big.png', dpi=500, bbox_inches='tight')
 p.clf()
 
 """
+arr = np.load('p_coeff.npz')
+
+coeff = arr['coeff'][:]
 params = arr['params'][:]
 arr = None
 
@@ -160,7 +181,7 @@ fig.legend(handles, labels, loc='lower center', ncol=2)
 plt.tight_layout()
 plt.subplots_adjust(top=0.9)
 plt.subplots_adjust(bottom=0.15)
-fig.suptitle('Parameters vs weighted versions')
+fig.suptitle('Uniform and Weighted Parameters')
 plt.savefig('test_hist.png', bbox_inches = 'tight',dpi=500)
 """
 
